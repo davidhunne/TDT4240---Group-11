@@ -33,3 +33,22 @@ Useful Gradle tasks and flags:
 
 Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
 For example, `core:clean` removes `build` folder only from the `core` project.
+
+## User Manual
+
+## Developer Guidelines
+
+### Basic Guidelines for GitHub Use
+- Appropriate issue management:
+  - When creating a new issue, add a brief description and appropriate labels so that the team knows what the issue is meant to accomplish
+  - Assign yourself to an issue when you begin work on that, so that the team always has an overview ower that is "In progress" and what is not
+  - Make sure to close issues that have been completed or are no longer relevant
+- Create a unique branch for each issue, branching out of the dev branch. Code should never be pushed directly into main
+- Prefix branch-names with the appropriate "label" from the list below (ex. feat/add-firebase)
+  - feat: new feature or enhancement of existing feature
+  - fix: bug fix
+  - docs: adding documentation
+  - chore: minor changes that do not fit into any other category
+- Regularly push your progress to the relevant branch, even if some of it might still be WIP. This helps the team keep track of progress and makes it easier to flexibly distribute tasks to other members of the team
+- Each pull request needs the approval of at least one other reviewer before being merged into the dev branch
+  
