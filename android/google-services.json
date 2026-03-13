@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "578646627998",
+    "project_id": "mountain-penguin",
+    "storage_bucket": "mountain-penguin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:578646627998:android:e634ba82560aa951250d8f",
+        "android_client_info": {
+          "package_name": "com.assignments.mtnpen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4Rfr8d2JXy89paxqjTmw0sto-FGfBGmc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
