@@ -1,0 +1,229 @@
+import { db } from "../config/firebase";
+import { Game, GamePlayer, Move } from "../types";
+import { v4 as uuidv4 } from "uuid";
+import { Timestamp } from "firebase-admin/firestore";
+import { updatePlayerStats } from "./playerService";
+
+const GAMES = "games";
+const MOVES = "moves";
+
+export async function createGame(
+  hostId: string,
+  hostDisplayName: string,
+): Promise<Game> {
+  const id = uuidv4();
+  const now = Timestamp.now();
+
+  const hostPlayer: GamePlayer = {
+    playerId: hostId,
+    displayName: hostDisplayName,
+    position: { x: 0, y: 0 },
+    score: 0,
+    connected: true,
+  };
+
+  const game: Game = {
+    id,
+    status: "lobby",
+    hostId,
+    players: [hostPlayer],
+    currentTurnIndex: 0,
+    turnOrder: [hostId],
+    boardState: {},
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.collection(GAMES).doc(id).set(game);
+  return game;
+}
+
+export async function getGame(id: string): Promise<Game | null> {
+  const doc = await db.collection(GAMES).doc(id).get();
+  if (!doc.exists) return null;
+  return doc.data() as Game;
+}
+
+export async function listLobbies(): Promise<Game[]> {
+  const snapshot = await db
+    .collection(GAMES)
+    .where("status", "==", "lobby")
+    .orderBy("createdAt", "desc")
+    .limit(20)
+    .get();
+
+  return snapshot.docs.map((doc) => doc.data() as Game);
+}
+
+export async function joinGame(
+  gameId: string,
+  playerId: string,
+  displayName: string,
+): Promise<Game> {
+  const game = await getGame(gameId);
+  if (!game) throw new Error("Game not found");
+  if (game.status !== "lobby") throw new Error("Game is not in lobby state");
+
+  const alreadyJoined = game.players.some((p) => p.playerId === playerId);
+  if (alreadyJoined) return game;
+
+  const newPlayer: GamePlayer = {
+    playerId,
+    displayName,
+    position: { x: 0, y: 0 },
+    score: 0,
+    connected: true,
+  };
+
+  game.players.push(newPlayer);
+  game.turnOrder.push(playerId);
+  game.updatedAt = Timestamp.now();
+
+  await db.collection(GAMES).doc(gameId).set(game);
+  return game;
+}
+
+export async function leaveGame(
+  gameId: string,
+  playerId: string,
+): Promise<Game> {
+  const game = await getGame(gameId);
+  if (!game) throw new Error("Game not found");
+
+  if (game.status === "lobby") {
+    game.players = game.players.filter((p) => p.playerId !== playerId);
+    game.turnOrder = game.turnOrder.filter((id) => id !== playerId);
+
+    if (game.players.length === 0) {
+      await db.collection(GAMES).doc(gameId).delete();
+      return game;
+    }
+
+    if (game.hostId === playerId) {
+      game.hostId = game.players[0].playerId;
+    }
+  } else if (game.status === "in_progress") {
+    const player = game.players.find((p) => p.playerId === playerId);
+    if (player) player.connected = false;
+  }
+
+  game.updatedAt = Timestamp.now();
+  await db.collection(GAMES).doc(gameId).set(game);
+  return game;
+}
+
+export async function startGame(gameId: string, hostId: string): Promise<Game> {
+  const game = await getGame(gameId);
+  if (!game) throw new Error("Game not found");
+  if (game.hostId !== hostId)
+    throw new Error("Only the host can start the game");
+  if (game.status !== "lobby") throw new Error("Game is not in lobby state");
+  if (game.players.length < 2)
+    throw new Error("Need at least 2 players to start");
+
+  game.status = "in_progress";
+  game.currentTurnIndex = 0;
+  game.updatedAt = Timestamp.now();
+
+  await db.collection(GAMES).doc(gameId).set(game);
+  return game;
+}
+
+export async function submitMove(
+  gameId: string,
+  playerId: string,
+  action: string,
+  data: Record<string, unknown>,
+): Promise<{ game: Game; move: Move }> {
+  const game = await getGame(gameId);
+  if (!game) throw new Error("Game not found");
+  if (game.status !== "in_progress") throw new Error("Game is not in progress");
+
+  const currentPlayerId = game.turnOrder[game.currentTurnIndex];
+  if (currentPlayerId !== playerId) throw new Error("Not your turn");
+
+  const moveId = uuidv4();
+  const move: Move = {
+    id: moveId,
+    gameId,
+    playerId,
+    turnNumber: game.currentTurnIndex,
+    action,
+    data,
+    timestamp: Timestamp.now(),
+  };
+
+  await db.collection(MOVES).doc(moveId).set(move);
+
+  // Apply move to game state
+  const player = game.players.find((p) => p.playerId === playerId);
+  if (player) {
+    if (data.position && typeof data.position === "object") {
+      const pos = data.position as { x?: number; y?: number };
+      if (pos.x !== undefined) player.position.x = pos.x;
+      if (pos.y !== undefined) player.position.y = pos.y;
+    }
+    if (typeof data.scoreChange === "number") {
+      player.score += data.scoreChange;
+    }
+  }
+
+  if (data.boardState && typeof data.boardState === "object") {
+    Object.assign(game.boardState, data.boardState);
+  }
+
+  // Advance turn
+  game.currentTurnIndex = (game.currentTurnIndex + 1) % game.turnOrder.length;
+  game.updatedAt = Timestamp.now();
+
+  await db.collection(GAMES).doc(gameId).set(game);
+  return { game, move };
+}
+
+export async function endGame(
+  gameId: string,
+  winnerId?: string,
+): Promise<Game> {
+  const game = await getGame(gameId);
+  if (!game) throw new Error("Game not found");
+
+  game.status = "finished";
+  game.finishedAt = Timestamp.now();
+  game.updatedAt = Timestamp.now();
+
+  await db.collection(GAMES).doc(gameId).set(game);
+
+  // Update player stats
+  for (const player of game.players) {
+    const won = player.playerId === winnerId;
+    await updatePlayerStats(player.playerId, player.score, won);
+  }
+
+  return game;
+}
+
+export async function getGameMoves(gameId: string): Promise<Move[]> {
+  const snapshot = await db
+    .collection(MOVES)
+    .where("gameId", "==", gameId)
+    .orderBy("timestamp", "asc")
+    .get();
+
+  return snapshot.docs.map((doc) => doc.data() as Move);
+}
+
+export async function updateConnectionState(
+  gameId: string,
+  playerId: string,
+  connected: boolean,
+): Promise<void> {
+  const game = await getGame(gameId);
+  if (!game) return;
+
+  const player = game.players.find((p) => p.playerId === playerId);
+  if (player) {
+    player.connected = connected;
+    game.updatedAt = Timestamp.now();
+    await db.collection(GAMES).doc(gameId).set(game);
+  }
+}
