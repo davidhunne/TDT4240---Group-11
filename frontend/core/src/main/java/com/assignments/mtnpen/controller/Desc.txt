@@ -1,0 +1,2 @@
+Controller is for interactable things in the code, what the user can do to affect the model and view,
+or how the code interacts with the model and view.

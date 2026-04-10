@@ -1,0 +1,2 @@
+Every asset managing in this game. Possibility of subfolders for physical assets, or putting them i android.assets, which is at this point (branch)
+the resources root.

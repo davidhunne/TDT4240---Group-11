@@ -1,0 +1,1 @@
+Responisbility for lobby creation and maintenance. Should interact with mtnpen.network.
