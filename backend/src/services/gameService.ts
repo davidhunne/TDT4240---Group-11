@@ -7,6 +7,39 @@ import { updatePlayerStats } from "./playerService";
 const GAMES = "games";
 const MOVES = "moves";
 
+const BOARD_SIZE = 100;
+const OBSTACLE_COUNT = 500;
+const BOOST_COUNT = 200;
+
+function generateBoard(): Record<string, unknown> {
+  const cells: Record<string, "obstacle" | "boost"> = {};
+  const used = new Set<string>();
+  // Reserve the spawn cell so players never start on an obstacle/boost.
+  used.add("0,0");
+
+  const placeRandom = (type: "obstacle" | "boost", count: number) => {
+    let placed = 0;
+    while (placed < count) {
+      const x = Math.floor(Math.random() * BOARD_SIZE);
+      const y = Math.floor(Math.random() * BOARD_SIZE);
+      const key = `${x},${y}`;
+      if (used.has(key)) continue;
+      used.add(key);
+      cells[key] = type;
+      placed++;
+    }
+  };
+
+  placeRandom("obstacle", OBSTACLE_COUNT);
+  placeRandom("boost", BOOST_COUNT);
+
+  return {
+    width: BOARD_SIZE,
+    height: BOARD_SIZE,
+    cells,
+  };
+}
+
 export async function createGame(
   hostId: string,
   hostDisplayName: string,
@@ -29,7 +62,7 @@ export async function createGame(
     players: [hostPlayer],
     currentTurnIndex: 0,
     turnOrder: [hostId],
-    boardState: {},
+    boardState: generateBoard(),
     createdAt: now,
     updatedAt: now,
   };
