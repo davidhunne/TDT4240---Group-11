@@ -1,0 +1,1 @@
+Here lies the model part of the code, i.e. non-interactable, statics. Parameters, entities, non-interactables.
