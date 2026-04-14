@@ -3,6 +3,12 @@ import { Game, GamePlayer, Move } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import { Timestamp } from "firebase-admin/firestore";
 import { updatePlayerStats } from "./playerService";
+import {
+  World,
+  MovementSystem,
+  CollisionSystem,
+  PositionComponent,
+} from "../ecs";
 
 const GAMES = "games";
 const MOVES = "moves";
@@ -55,6 +61,13 @@ export async function createGame(
     connected: true,
   };
 
+  // Spin up an ECS world for this game through the singleton. The world
+  // generates a 100x100 board with obstacles and boosts, then we add the host
+  // as a player entity.
+  const world = World.getInstance();
+  const ecs = world.createGame(id);
+  world.spawnPlayer(ecs, hostPlayer);
+
   const game: Game = {
     id,
     status: "lobby",
@@ -62,7 +75,7 @@ export async function createGame(
     players: [hostPlayer],
     currentTurnIndex: 0,
     turnOrder: [hostId],
-    boardState: generateBoard(),
+    boardState: world.serializeBoard(ecs) as unknown as Record<string, unknown>,
     createdAt: now,
     updatedAt: now,
   };
@@ -112,6 +125,11 @@ export async function joinGame(
   game.turnOrder.push(playerId);
   game.updatedAt = Timestamp.now();
 
+  // Mirror the new player into the ECS world.
+  const world = World.getInstance();
+  const ecs = world.getOrHydrate(game);
+  world.spawnPlayer(ecs, newPlayer);
+
   await db.collection(GAMES).doc(gameId).set(game);
   return game;
 }
@@ -129,6 +147,7 @@ export async function leaveGame(
 
     if (game.players.length === 0) {
       await db.collection(GAMES).doc(gameId).delete();
+      World.getInstance().deleteGame(gameId);
       return game;
     }
 
@@ -175,6 +194,9 @@ export async function submitMove(
   const currentPlayerId = game.turnOrder[game.currentTurnIndex];
   if (currentPlayerId !== playerId) throw new Error("Not your turn");
 
+  const world = World.getInstance();
+  const ecs = world.getOrHydrate(game);
+
   const moveId = uuidv4();
   const move: Move = {
     id: moveId,
@@ -186,24 +208,34 @@ export async function submitMove(
     timestamp: Timestamp.now(),
   };
 
+  // Run movement through the ECS movement system so obstacle checks and
+  // bounds validation stay out of this service.
+  if (action === "move" && data.position && typeof data.position === "object") {
+    const pos = data.position as Partial<PositionComponent>;
+    if (typeof pos.x === "number" && typeof pos.y === "number") {
+      const result = MovementSystem.move(ecs, playerId, { x: pos.x, y: pos.y });
+      if (!result.success) {
+        throw new Error(`Invalid move: ${result.reason ?? "unknown"}`);
+      }
+      const collision = CollisionSystem.run(ecs, playerId);
+      move.data = {
+        ...data,
+        resolved: {
+          position: result.position,
+          pickedBoost: collision.pickedBoost ?? null,
+        },
+      };
+    }
+  }
+
   await db.collection(MOVES).doc(moveId).set(move);
 
-  // Apply move to game state
-  const player = game.players.find((p) => p.playerId === playerId);
-  if (player) {
-    if (data.position && typeof data.position === "object") {
-      const pos = data.position as { x?: number; y?: number };
-      if (pos.x !== undefined) player.position.x = pos.x;
-      if (pos.y !== undefined) player.position.y = pos.y;
-    }
-    if (typeof data.scoreChange === "number") {
-      player.score += data.scoreChange;
-    }
-  }
-
-  if (data.boardState && typeof data.boardState === "object") {
-    Object.assign(game.boardState, data.boardState);
-  }
+  // Mirror ECS state back into the Game document.
+  world.syncPlayersToGame(ecs, game);
+  game.boardState = world.serializeBoard(ecs) as unknown as Record<
+    string,
+    unknown
+  >;
 
   // Advance turn
   game.currentTurnIndex = (game.currentTurnIndex + 1) % game.turnOrder.length;
@@ -225,6 +257,9 @@ export async function endGame(
   game.updatedAt = Timestamp.now();
 
   await db.collection(GAMES).doc(gameId).set(game);
+
+  // Drop the in-memory ECS world for the finished game.
+  World.getInstance().deleteGame(gameId);
 
   // Update player stats
   for (const player of game.players) {
