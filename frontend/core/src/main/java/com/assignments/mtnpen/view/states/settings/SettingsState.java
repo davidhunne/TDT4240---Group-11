@@ -1,8 +1,8 @@
-package com.assignments.mtnpen.state.settings;
+package com.assignments.mtnpen.view.states.settings;
 
-import com.assignments.mtnpen.state.base.BaseState;
-import com.assignments.mtnpen.state.manager.GameStateManager;
-import com.assignments.mtnpen.state.menu.MenuState;
+import com.assignments.mtnpen.view.states.base.BaseState;
+import com.assignments.mtnpen.view.states.manager.GameStateManager;
+import com.assignments.mtnpen.view.states.menu.MenuState;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;

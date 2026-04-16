@@ -1,7 +1,7 @@
 package com.assignments.mtnpen;
 
-import com.assignments.mtnpen.state.manager.GameStateManager;
-import com.assignments.mtnpen.state.menu.MenuState;
+import com.assignments.mtnpen.view.states.manager.GameStateManager;
+import com.assignments.mtnpen.view.states.menu.MenuState;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 

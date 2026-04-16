@@ -1,6 +1,7 @@
-package com.assignments.mtnpen.state.game;
+package com.assignments.mtnpen.view.states.game;
 
-import com.assignments.mtnpen.state.base.BaseState;
+import com.assignments.mtnpen.view.states.base.BaseState;
+import com.assignments.mtnpen.view.states.manager.GameStateManager;
 
 public class GameState extends BaseState {
     public GameState(GameStateManager gsm) {

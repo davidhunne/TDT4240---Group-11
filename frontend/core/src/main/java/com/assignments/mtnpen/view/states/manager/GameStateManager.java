@@ -1,7 +1,7 @@
-package com.assignments.mtnpen.state.manager;
+package com.assignments.mtnpen.view.states.manager;
 
 import com.assignments.mtnpen.network.NetworkManager;
-import com.assignments.mtnpen.state.State;
+import com.assignments.mtnpen.view.states.State;
 import java.util.Stack;
 
 public class GameStateManager {
