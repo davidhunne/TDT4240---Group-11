@@ -1,6 +1,7 @@
 import { db } from "../config/firebase";
 import { Player, PlayerStats } from "../types";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { NotFoundError } from "../errors";
 
 const PLAYERS = "players";
 
@@ -52,6 +53,8 @@ export async function updateDisplayName(
   id: string,
   displayName: string
 ): Promise<void> {
+  const existing = await getPlayer(id);
+  if (!existing) throw new NotFoundError(`Player ${id} not found`);
   await db.collection(PLAYERS).doc(id).update({ displayName });
 }
 
@@ -61,7 +64,12 @@ export async function updatePlayerStats(
   won: boolean
 ): Promise<void> {
   const player = await getPlayer(id);
-  if (!player) return;
+  // Missing stat targets are logged but not fatal — finishing a game should
+  // not 500 if one participant's record was deleted mid-match.
+  if (!player) {
+    console.warn(`[updatePlayerStats] player ${id} not found, skipping`);
+    return;
+  }
 
   const stats = player.stats;
   stats.gamesPlayed += 1;

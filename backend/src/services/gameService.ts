@@ -9,6 +9,12 @@ import {
   CollisionSystem,
   PositionComponent,
 } from "../ecs";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "../errors";
 
 const GAMES = "games";
 const MOVES = "moves";
@@ -101,14 +107,20 @@ export async function listLobbies(): Promise<Game[]> {
   return snapshot.docs.map((doc) => doc.data() as Game);
 }
 
+async function getGameOrThrow(id: string): Promise<Game> {
+  const game = await getGame(id);
+  if (!game) throw new NotFoundError(`Game ${id} not found`);
+  return game;
+}
+
 export async function joinGame(
   gameId: string,
   playerId: string,
   displayName: string,
 ): Promise<Game> {
-  const game = await getGame(gameId);
-  if (!game) throw new Error("Game not found");
-  if (game.status !== "lobby") throw new Error("Game is not in lobby state");
+  const game = await getGameOrThrow(gameId);
+  if (game.status !== "lobby")
+    throw new ConflictError("Game is not in lobby state");
 
   const alreadyJoined = game.players.some((p) => p.playerId === playerId);
   if (alreadyJoined) return game;
@@ -138,8 +150,7 @@ export async function leaveGame(
   gameId: string,
   playerId: string,
 ): Promise<Game> {
-  const game = await getGame(gameId);
-  if (!game) throw new Error("Game not found");
+  const game = await getGameOrThrow(gameId);
 
   if (game.status === "lobby") {
     game.players = game.players.filter((p) => p.playerId !== playerId);
@@ -165,13 +176,13 @@ export async function leaveGame(
 }
 
 export async function startGame(gameId: string, hostId: string): Promise<Game> {
-  const game = await getGame(gameId);
-  if (!game) throw new Error("Game not found");
+  const game = await getGameOrThrow(gameId);
   if (game.hostId !== hostId)
-    throw new Error("Only the host can start the game");
-  if (game.status !== "lobby") throw new Error("Game is not in lobby state");
+    throw new ForbiddenError("Only the host can start the game");
+  if (game.status !== "lobby")
+    throw new ConflictError("Game is not in lobby state");
   if (game.players.length < 2)
-    throw new Error("Need at least 2 players to start");
+    throw new ValidationError("Need at least 2 players to start");
 
   game.status = "in_progress";
   game.currentTurnIndex = 0;
@@ -187,12 +198,12 @@ export async function submitMove(
   action: string,
   data: Record<string, unknown>,
 ): Promise<{ game: Game; move: Move }> {
-  const game = await getGame(gameId);
-  if (!game) throw new Error("Game not found");
-  if (game.status !== "in_progress") throw new Error("Game is not in progress");
+  const game = await getGameOrThrow(gameId);
+  if (game.status !== "in_progress")
+    throw new ConflictError("Game is not in progress");
 
   const currentPlayerId = game.turnOrder[game.currentTurnIndex];
-  if (currentPlayerId !== playerId) throw new Error("Not your turn");
+  if (currentPlayerId !== playerId) throw new ForbiddenError("Not your turn");
 
   const world = World.getInstance();
   const ecs = world.getOrHydrate(game);
@@ -215,7 +226,7 @@ export async function submitMove(
     if (typeof pos.x === "number" && typeof pos.y === "number") {
       const result = MovementSystem.move(ecs, playerId, { x: pos.x, y: pos.y });
       if (!result.success) {
-        throw new Error(`Invalid move: ${result.reason ?? "unknown"}`);
+        throw new ValidationError(`Invalid move: ${result.reason ?? "unknown"}`);
       }
       const collision = CollisionSystem.run(ecs, playerId);
       move.data = {
@@ -249,8 +260,7 @@ export async function endGame(
   gameId: string,
   winnerId?: string,
 ): Promise<Game> {
-  const game = await getGame(gameId);
-  if (!game) throw new Error("Game not found");
+  const game = await getGameOrThrow(gameId);
 
   game.status = "finished";
   game.finishedAt = Timestamp.now();
@@ -285,13 +295,12 @@ export async function updateConnectionState(
   playerId: string,
   connected: boolean,
 ): Promise<void> {
-  const game = await getGame(gameId);
-  if (!game) return;
+  const game = await getGameOrThrow(gameId);
 
   const player = game.players.find((p) => p.playerId === playerId);
-  if (player) {
-    player.connected = connected;
-    game.updatedAt = Timestamp.now();
-    await db.collection(GAMES).doc(gameId).set(game);
-  }
+  if (!player) throw new NotFoundError(`Player ${playerId} not in game ${gameId}`);
+
+  player.connected = connected;
+  game.updatedAt = Timestamp.now();
+  await db.collection(GAMES).doc(gameId).set(game);
 }
