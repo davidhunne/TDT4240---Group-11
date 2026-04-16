@@ -1,4 +1,4 @@
-package com.assignments.mtnpen.state;
+package com.assignments.mtnpen.view.states;
 
 public interface State {
     void create();

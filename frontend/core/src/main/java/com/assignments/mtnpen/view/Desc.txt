@@ -1,1 +1,0 @@
-The view of mountain penguins. Anything audio / visual goes here. (States and sprites/assets)
