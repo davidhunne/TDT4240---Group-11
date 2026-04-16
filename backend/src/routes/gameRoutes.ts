@@ -11,16 +11,18 @@ import {
   getGameMoves,
   updateConnectionState,
 } from "../services/gameService";
-import { NotFoundError, ValidationError } from "../errors";
+import { NotFoundError } from "../errors";
+import {
+  connectionBody,
+  createGameBody,
+  endGameBody,
+  joinGameBody,
+  parseOrThrow,
+  playerIdBody,
+  submitMoveBody,
+} from "../schemas";
 
 const router = Router();
-
-function requireString(value: unknown, field: string): string {
-  if (typeof value !== "string" || value.length === 0) {
-    throw new ValidationError(`${field} is required`);
-  }
-  return value;
-}
 
 // List open lobbies
 router.get("/lobbies", async (_req: Request, res: Response) => {
@@ -30,8 +32,7 @@ router.get("/lobbies", async (_req: Request, res: Response) => {
 
 // Create a new game
 router.post("/", async (req: Request, res: Response) => {
-  const playerId = requireString(req.body?.playerId, "playerId");
-  const displayName = requireString(req.body?.displayName, "displayName");
+  const { playerId, displayName } = parseOrThrow(createGameBody, req.body, "body");
   const game = await createGame(playerId, displayName);
   res.status(201).json(game);
 });
@@ -47,8 +48,7 @@ router.get("/:gameId", async (req: Request, res: Response) => {
 // Join a game
 router.post("/:gameId/join", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
-  const playerId = requireString(req.body?.playerId, "playerId");
-  const displayName = requireString(req.body?.displayName, "displayName");
+  const { playerId, displayName } = parseOrThrow(joinGameBody, req.body, "body");
   const game = await joinGame(gameId, playerId, displayName);
   res.json(game);
 });
@@ -56,7 +56,7 @@ router.post("/:gameId/join", async (req: Request, res: Response) => {
 // Leave a game
 router.post("/:gameId/leave", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
-  const playerId = requireString(req.body?.playerId, "playerId");
+  const { playerId } = parseOrThrow(playerIdBody, req.body, "body");
   const game = await leaveGame(gameId, playerId);
   res.json(game);
 });
@@ -64,7 +64,7 @@ router.post("/:gameId/leave", async (req: Request, res: Response) => {
 // Start the game
 router.post("/:gameId/start", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
-  const playerId = requireString(req.body?.playerId, "playerId");
+  const { playerId } = parseOrThrow(playerIdBody, req.body, "body");
   const game = await startGame(gameId, playerId);
   res.json(game);
 });
@@ -72,17 +72,15 @@ router.post("/:gameId/start", async (req: Request, res: Response) => {
 // Submit a move
 router.post("/:gameId/move", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
-  const playerId = requireString(req.body?.playerId, "playerId");
-  const action = requireString(req.body?.action, "action");
-  const data = (req.body?.data ?? {}) as Record<string, unknown>;
-  const result = await submitMove(gameId, playerId, action, data);
+  const { playerId, action, data } = parseOrThrow(submitMoveBody, req.body, "body");
+  const result = await submitMove(gameId, playerId, action, data ?? {});
   res.json(result);
 });
 
 // End the game
 router.post("/:gameId/end", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
-  const { winnerId } = req.body ?? {};
+  const { winnerId } = parseOrThrow(endGameBody, req.body ?? {}, "body");
   const game = await endGame(gameId, winnerId);
   res.json(game);
 });
@@ -97,11 +95,7 @@ router.get("/:gameId/moves", async (req: Request, res: Response) => {
 // Update connection state
 router.post("/:gameId/connection", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
-  const playerId = requireString(req.body?.playerId, "playerId");
-  const { connected } = req.body ?? {};
-  if (typeof connected !== "boolean") {
-    throw new ValidationError("connected must be a boolean");
-  }
+  const { playerId, connected } = parseOrThrow(connectionBody, req.body, "body");
   await updateConnectionState(gameId, playerId, connected);
   res.json({ success: true });
 });

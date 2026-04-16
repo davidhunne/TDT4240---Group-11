@@ -5,21 +5,19 @@ import {
   updateDisplayName,
   getLeaderboard,
 } from "../services/playerService";
-import { NotFoundError, ValidationError } from "../errors";
+import { NotFoundError } from "../errors";
+import {
+  leaderboardQuery,
+  parseOrThrow,
+  updateDisplayNameBody,
+  upsertPlayerBody,
+} from "../schemas";
 
 const router = Router();
 
-function requireString(value: unknown, field: string): string {
-  if (typeof value !== "string" || value.length === 0) {
-    throw new ValidationError(`${field} is required`);
-  }
-  return value;
-}
-
 // Register or re-identify a player (call on app launch)
 router.post("/", async (req: Request, res: Response) => {
-  const id = requireString(req.body?.id, "id");
-  const displayName = requireString(req.body?.displayName, "displayName");
+  const { id, displayName } = parseOrThrow(upsertPlayerBody, req.body, "body");
   const player = await getOrCreatePlayer(id, displayName);
   res.json(player);
 });
@@ -35,16 +33,15 @@ router.get("/:id", async (req: Request, res: Response) => {
 // Update display name
 router.patch("/:id", async (req: Request, res: Response) => {
   const id = req.params.id as string;
-  const displayName = requireString(req.body?.displayName, "displayName");
+  const { displayName } = parseOrThrow(updateDisplayNameBody, req.body, "body");
   await updateDisplayName(id, displayName);
   res.json({ success: true });
 });
 
 // Leaderboard
 router.get("/leaderboard/top", async (req: Request, res: Response) => {
-  const rawLimit = parseInt(req.query.limit as string, 10);
-  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 10;
-  const players = await getLeaderboard(limit);
+  const { limit } = parseOrThrow(leaderboardQuery, req.query, "query");
+  const players = await getLeaderboard(limit ?? 10);
   const leaderboard = players.map((p) => ({
     playerId: p.id,
     displayName: p.displayName,
