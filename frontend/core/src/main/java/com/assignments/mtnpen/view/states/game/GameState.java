@@ -10,16 +10,16 @@ public class GameState extends BaseState {
 
     @Override
     protected void update(float delta) {
-        // update game logic
+        // TODO: update game logic
     }
 
     @Override
     public void enter() {
-        // test
+        // TODO
     }
 
     @Override
     public void leave() {
-        // test
+        // TODO
     }
 }

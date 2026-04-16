@@ -38,7 +38,7 @@ public class ResultsState extends BaseState {
     @Override
     public void create() {
         super.create();
-        skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
+        skin = new Skin(Gdx.files.internal("skin/uiskin.json")); //TODO: Replace with actual asset
         buildUi();
         registerListeners();
     }

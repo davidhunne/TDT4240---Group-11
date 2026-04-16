@@ -46,12 +46,12 @@ public abstract class BaseState implements State {
 
     @Override
     public void pause() {
-        // Pause state
+        //TODO: Pause state
     }
 
     @Override
     public void resume() {
-        // Resume state
+        //TODO: Resume state
     }
 
     @Override

@@ -6,6 +6,8 @@ import com.badlogic.gdx.net.HttpRequestBuilder;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonWriter;
 
+//TODO: Wire everything in this file properly up to the backend - Make sure it aligns
+
 public class NetworkManager {
     private static final String BASE_URL = "http://localhost:3000/api";
     private final Json json;
