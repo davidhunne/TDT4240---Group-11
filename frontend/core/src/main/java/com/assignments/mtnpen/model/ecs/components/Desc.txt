@@ -1,1 +1,0 @@
-Here lies the components of ECS, s.a. position, velocity.

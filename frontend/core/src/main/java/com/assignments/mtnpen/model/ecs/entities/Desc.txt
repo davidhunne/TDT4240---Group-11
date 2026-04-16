@@ -1,1 +1,0 @@
-Here lies the entities of ECS, s.a. Player, Interactables etc.

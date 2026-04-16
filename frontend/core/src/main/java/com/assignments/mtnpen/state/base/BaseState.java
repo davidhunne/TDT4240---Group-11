@@ -1,26 +1,47 @@
 package com.assignments.mtnpen.state.base;
 
 import com.assignments.mtnpen.state.State;
+import com.assignments.mtnpen.state.manager.GameStateManager;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public abstract class BaseState implements State {
+
+    protected final GameStateManager gsm;
+    protected Stage stage;
+
+    public BaseState(GameStateManager gsm) {
+        this.gsm = gsm;
+    }
+
+    protected abstract void update(float delta);
+
     @Override
     public void create() {
-        // Create state
+        stage = new Stage(new ScreenViewport());
     }
 
     @Override
     public void enter() {
-        // Enter state
+        Gdx.input.setInputProcessor(stage);
     }
 
     @Override
     public void render(float delta) {
-        // Render state
+        update(delta);
+
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        stage.act(delta);
+        stage.draw();
     }
 
     @Override
     public void resize(int width, int height) {
-        // Resize state
+        stage.getViewport().update(width, height, true);
     }
 
     @Override
@@ -35,6 +56,9 @@ public abstract class BaseState implements State {
 
     @Override
     public void leave() {
-        // Leave state
+        if(Gdx.input.getInputProcessor() == stage) {
+            Gdx.input.setInputProcessor(null);
+        }
+        stage.dispose();
     }
 }
