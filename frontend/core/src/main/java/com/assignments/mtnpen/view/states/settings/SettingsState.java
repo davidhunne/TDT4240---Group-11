@@ -1,5 +1,6 @@
 package com.assignments.mtnpen.view.states.settings;
 
+import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
 import com.assignments.mtnpen.view.states.menu.MenuState;
@@ -33,7 +34,7 @@ public class SettingsState extends BaseState {
     @Override
     public void create() {
         super.create();
-        skin = new Skin(Gdx.files.internal("skin/uiskin.json")); //TODO: Replace with actual asset
+        skin = GameAssetManager.loadUiSkin(); //TODO: Replace with actual asset
         buildUi();
         registerListeners();
     }

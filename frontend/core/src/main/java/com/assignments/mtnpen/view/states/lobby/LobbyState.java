@@ -1,5 +1,6 @@
 package com.assignments.mtnpen.view.states.lobby;
 
+import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
 import com.assignments.mtnpen.view.states.game.GameState;
@@ -52,7 +53,7 @@ public class LobbyState extends BaseState {
     public void create() {
         super.create();
 
-        skin = new Skin(Gdx.files.internal("skin/uiskin.json")); //TODO: Replace with actual asset
+        skin = GameAssetManager.loadUiSkin(); //TODO: Replace with actual asset
 
         mockPopulatePlayers();
         buildUi();
