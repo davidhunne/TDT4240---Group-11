@@ -1,5 +1,7 @@
 package com.assignments.mtnpen.view.states.menu;
 
+import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
+import com.assignments.mtnpen.network.NetworkManager;
 import com.assignments.mtnpen.controller.menu.MenuController;
 import com.assignments.mtnpen.model.menu.MenuModel;
 import com.assignments.mtnpen.view.states.base.BaseState;
@@ -43,7 +45,7 @@ public class MenuState extends BaseState {
     public void create() {
         super.create();
 
-        skin = new Skin(Gdx.files.internal("skin/uiskin.json")); //TODO: Replace with actual asset
+        skin = GameAssetManager.loadUiSkin(); //TODO: Replace with actual asset
 
         buildUi();
         registerListeners();

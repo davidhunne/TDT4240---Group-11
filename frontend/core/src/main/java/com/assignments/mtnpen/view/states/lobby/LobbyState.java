@@ -1,5 +1,6 @@
 package com.assignments.mtnpen.view.states.lobby;
 
+import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 import com.assignments.mtnpen.controller.lobby.LobbyController;
 import com.assignments.mtnpen.model.lobby.LobbyModel;
 import com.assignments.mtnpen.view.states.base.BaseState;
@@ -44,7 +45,7 @@ public class LobbyState extends BaseState {
     @Override
     public void create() {
         super.create();
-        skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
+        skin = GameAssetManager.loadUiSkin(); //TODO: Replace with actual asset
         buildUi();
         registerListeners();
         refreshPlayerList();

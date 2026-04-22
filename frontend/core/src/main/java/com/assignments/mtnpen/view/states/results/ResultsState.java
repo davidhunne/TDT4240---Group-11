@@ -1,5 +1,6 @@
 package com.assignments.mtnpen.view.states.results;
 
+import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 import com.assignments.mtnpen.controller.results.ResultsController;
 import com.assignments.mtnpen.model.results.ResultsModel;
 import com.assignments.mtnpen.view.states.base.BaseState;
@@ -40,7 +41,7 @@ public class ResultsState extends BaseState {
     @Override
     public void create() {
         super.create();
-        skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
+        skin = GameAssetManager.loadUiSkin(); //TODO: Replace with actual asset
         buildUi();
         registerListeners();
     }
