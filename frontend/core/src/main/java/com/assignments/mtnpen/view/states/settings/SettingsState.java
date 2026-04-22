@@ -1,18 +1,23 @@
 package com.assignments.mtnpen.view.states.settings;
 
 import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
+import com.assignments.mtnpen.controller.settings.SettingsController;
+import com.assignments.mtnpen.model.settings.SettingsModel;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
-import com.assignments.mtnpen.view.states.menu.MenuState;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
 public class SettingsState extends BaseState {
+
+    private final SettingsModel model;
+    private final SettingsController controller;
 
     private Skin skin;
     private Table rootTable;
@@ -25,10 +30,10 @@ public class SettingsState extends BaseState {
     private TextButton volumeUpButton;
     private TextButton backButton;
 
-    private int volume = 50;
-
     public SettingsState(GameStateManager gsm) {
         super(gsm);
+        this.model = new SettingsModel();
+        this.controller = new SettingsController(model, gsm);
     }
 
     @Override
@@ -42,7 +47,10 @@ public class SettingsState extends BaseState {
     @Override
     protected void update(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            gsm.set(new MenuState(gsm));
+            controller.onBackClicked();
+        }
+        if (!volumeLabel.getText().toString().contains(String.valueOf(model.getVolume()))) {
+            volumeLabel.setText("Volume: " + model.getVolume());
         }
     }
 
@@ -60,7 +68,7 @@ public class SettingsState extends BaseState {
         rootTable.center();
 
         titleLabel = new Label("Settings", skin);
-        volumeLabel = new Label("Volume: " + volume, skin);
+        volumeLabel = new Label("Volume: " + model.getVolume(), skin);
         statusLabel = new Label("", skin);
 
         volumeDownButton = new TextButton("-", skin);
@@ -86,23 +94,21 @@ public class SettingsState extends BaseState {
         volumeDownButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                volume = Math.max(0, volume - 10);
-                volumeLabel.setText("Volume: " + volume);
+                controller.onVolumeDown();
             }
         });
 
         volumeUpButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                volume = Math.min(100, volume + 10);
-                volumeLabel.setText("Volume: " + volume);
+                controller.onVolumeUp();
             }
         });
 
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                gsm.set(new MenuState(gsm));
+                controller.onBackClicked();
             }
         });
     }

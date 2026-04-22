@@ -2,24 +2,26 @@ package com.assignments.mtnpen.view.states.menu;
 
 import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 import com.assignments.mtnpen.network.NetworkManager;
+import com.assignments.mtnpen.controller.menu.MenuController;
+import com.assignments.mtnpen.model.menu.MenuModel;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
-import com.assignments.mtnpen.view.states.lobby.LobbyState;
-import com.assignments.mtnpen.view.states.settings.SettingsState;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 public class MenuState extends BaseState {
 
-    private Skin skin;
+    private final MenuModel model;
+    private final MenuController controller;
 
+    private Skin skin;
     private Table rootTable;
 
     private Label titleLabel;
@@ -35,6 +37,8 @@ public class MenuState extends BaseState {
 
     public MenuState(GameStateManager gsm) {
         super(gsm);
+        this.model = new MenuModel();
+        this.controller = new MenuController(model, gsm);
     }
 
     @Override
@@ -50,13 +54,16 @@ public class MenuState extends BaseState {
     @Override
     public void enter() {
         super.enter();
-        statusLabel.setText("Welcome! Create a lobby or join one with a code");
+        statusLabel.setText(model.getStatusMessage());
     }
 
     @Override
     protected void update(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            Gdx.app.exit();
+            controller.onExitClicked();
+        }
+        if (!statusLabel.getText().toString().equals(model.getStatusMessage())) {
+            statusLabel.setText(model.getStatusMessage());
         }
     }
 
@@ -72,12 +79,12 @@ public class MenuState extends BaseState {
         rootTable.center();
 
         titleLabel = new Label("Mountain Penguins", skin);
-        statusLabel = new Label("", skin);
+        statusLabel = new Label(model.getStatusMessage(), skin);
 
-        playerNameField = new TextField("", skin);
+        playerNameField = new TextField(model.getPlayerName(), skin);
         playerNameField.setMessageText("Enter player name");
 
-        lobbyCodeField = new TextField("", skin);
+        lobbyCodeField = new TextField(model.getLobbyCode(), skin);
         lobbyCodeField.setMessageText("Enter lobby code");
         lobbyCodeField.setMaxLength(6);
 
@@ -104,70 +111,28 @@ public class MenuState extends BaseState {
         createLobbyButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                final String playerName = playerNameField.getText().trim();
-
-                if (playerName.isEmpty()) {
-                    statusLabel.setText("Please enter a player name.");
-                    return;
-                }
-
-                statusLabel.setText("Creating a lobby...");
-                gsm.getNetworkManager().createGame("temp-id-" + playerName, playerName, new NetworkManager.NetworkCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        Gdx.app.postRunnable(() -> gsm.set(new LobbyState(gsm, playerName, "HOST12", true)));
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        Gdx.app.postRunnable(() -> statusLabel.setText("Failed to create lobby: " + t.getMessage()));
-                    }
-                });
+                controller.onCreateLobbyClicked(playerNameField.getText().trim());
             }
         });
 
         joinLobbyButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                final String playerName = playerNameField.getText().trim();
-                final String lobbyCode = lobbyCodeField.getText().trim().toUpperCase();
-
-                if (playerName.isEmpty()) {
-                    statusLabel.setText("Please enter a player name.");
-                    return;
-                }
-
-                if (lobbyCode.isEmpty()) {
-                    statusLabel.setText("Please enter a lobby code.");
-                    return;
-                }
-
-                statusLabel.setText("Joining lobby " + lobbyCode + "...");
-                gsm.getNetworkManager().joinGame(lobbyCode, "temp-id-" + playerName, playerName, new NetworkManager.NetworkCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        Gdx.app.postRunnable(() -> gsm.set(new LobbyState(gsm, playerName, lobbyCode, false)));
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        Gdx.app.postRunnable(() -> statusLabel.setText("Failed to join lobby: " + t.getMessage()));
-                    }
-                });
+                controller.onJoinLobbyClicked(playerNameField.getText().trim(), lobbyCodeField.getText().trim().toUpperCase());
             }
         });
 
         settingsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                gsm.set(new SettingsState(gsm));
+                controller.onSettingsClicked();
             }
         });
 
         exitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.exit();
+                controller.onExitClicked();
             }
         });
     }
