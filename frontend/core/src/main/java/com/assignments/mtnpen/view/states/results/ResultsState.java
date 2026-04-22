@@ -1,24 +1,26 @@
 package com.assignments.mtnpen.view.states.results;
 
+import com.assignments.mtnpen.controller.results.ResultsController;
+import com.assignments.mtnpen.model.results.ResultsModel;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
-import com.assignments.mtnpen.view.states.menu.MenuState;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
+import java.util.Collections;
+
 public class ResultsState extends BaseState {
 
-    private final String playerName;
-    private final int placement;
-    private final float finishTime;
+    private final ResultsModel model;
+    private final ResultsController controller;
 
     private Skin skin;
-
     private Table rootTable;
 
     private Label titleLabel;
@@ -30,15 +32,15 @@ public class ResultsState extends BaseState {
 
     public ResultsState(GameStateManager gsm, String playerName, int placement, float finishTime) {
         super(gsm);
-        this.playerName = playerName;
-        this.placement = placement;
-        this.finishTime = finishTime;
+        this.model = new ResultsModel();
+        this.model.setResults(Collections.singletonList(new ResultsModel.PlayerResult(playerName, placement)));
+        this.controller = new ResultsController(model, gsm);
     }
 
     @Override
     public void create() {
         super.create();
-        skin = new Skin(Gdx.files.internal("skin/uiskin.json")); //TODO: Replace with actual asset
+        skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
         buildUi();
         registerListeners();
     }
@@ -46,7 +48,7 @@ public class ResultsState extends BaseState {
     @Override
     protected void update(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            gsm.set(new MenuState(gsm));
+            controller.onBackToMenuClicked();
         }
     }
 
@@ -63,10 +65,12 @@ public class ResultsState extends BaseState {
         rootTable.setFillParent(true);
         rootTable.center();
 
+        ResultsModel.PlayerResult res = model.getResults().get(0);
+
         titleLabel = new Label("Race Results", skin);
-        placementLabel = new Label("Placement: " + placement, skin);
-        timeLabel = new Label("Time: " + String.format("%.2f", finishTime) + "s", skin);
-        statusLabel = new Label("Well played, " + playerName + "!", skin);
+        placementLabel = new Label("Placement: " + res.score, skin);
+        timeLabel = new Label("Time: --", skin); // For now
+        statusLabel = new Label("Well played, " + res.name + "!", skin);
 
         menuButton = new TextButton("Back to Menu", skin);
 
@@ -84,7 +88,7 @@ public class ResultsState extends BaseState {
         menuButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                gsm.set(new MenuState(gsm));
+                controller.onBackToMenuClicked();
             }
         });
     }
