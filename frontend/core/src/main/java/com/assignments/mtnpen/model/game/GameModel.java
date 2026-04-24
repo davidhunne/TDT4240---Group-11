@@ -4,6 +4,9 @@ public class GameModel {
     private boolean isPaused = false;
     private float gameTime = 0;
 
+    private float launchVelocityX = 0;
+    private float launchVelocityY = 0;
+
     public boolean isPaused() {
         return isPaused;
     }
@@ -24,5 +27,16 @@ public class GameModel {
         if (!isPaused) {
             gameTime += delta;
         }
+    }
+
+    public float getLaunchVelocityX() {
+        return launchVelocityX;
+    }
+    public float getLaunchVelocityY() {
+        return launchVelocityY;
+    }
+    public void setLaunchVelocity(float vx, float vy) {
+        this.launchVelocityX = vx;
+        this.launchVelocityY = vy;
     }
 }

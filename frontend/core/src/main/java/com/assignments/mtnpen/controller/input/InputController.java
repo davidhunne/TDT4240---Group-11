@@ -11,54 +11,61 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class InputController extends InputAdapter {
 
-  private boolean dragging = false;
-  private boolean touching = false;
-  private Vector2 touchOrigin = new Vector2();
-  private Vector2 currentTouchPos = new Vector2();
-
-  
-
-  public interface DragListener {
-    void onDragReleased(float deltaX, float deltaY);
+  public enum InputState {
+    IDLE, TOUCHING, DRAGGING, LOCKED
   }
 
-  private final DragListener dragListener;
+  private InputState state = InputState.IDLE;
 
+
+  private final Vector2 penguinPosition = new Vector2();
+  private Vector2 touchPosition = new Vector2();
+  private Vector2 relativeTouchPos = new Vector2();
+  
   private long touchStartMillis;
-  private Vector2 velocityBuffer = new Vector2();
+  private final AimListener aimListener;
 
-  public InputController(DragListener dragListener) {
-    this.dragListener = dragListener;
+
+  public InputController(AimListener aimListener) {
+    this.aimListener = aimListener;
+  }
+
+  public void setPenguinPosition(float x, float y) {
+    penguinPosition.set(x, y);
   }
 
 
   @Override
   public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-    if (pointer!=0) return false;
-    touching = true;
-    dragging = false;
+    if (pointer!=0 || state != InputState.IDLE) return false;
+
+    touchPosition.set(screenX, screenY);
+
+    float distance = penguinPosition.dst(screenX, screenY);
+    if (distance > GameParameters.MAX_LAUNCH_RADIUS) return false; // Only start touch if close enough to
+
+    state = InputState.TOUCHING;
     touchStartMillis = TimeUtils.millis();
 
-    touchOrigin.set(screenX, screenY);
+    relativeTouchPos.set(touchPosition).sub(penguinPosition).limit(GameParameters.MAX_LAUNCH_RADIUS);
 
-    currentTouchPos.set(screenX, screenY);
-    velocityBuffer.setZero();
     return true;
   }
 
   @Override
   public boolean touchDragged(int screenX, int screenY, int pointer) {
-    if (pointer!=0 || !touching) return false;
-
-
-    currentTouchPos.set(screenX, screenY);
-    velocityBuffer.set(currentTouchPos).sub(touchOrigin);
-
-    if (!dragging){
+    if (pointer!=0 || state == InputState.IDLE) return false;
+  
+    if (state == InputState.TOUCHING) {
       float timeSinceTouchStart = (TimeUtils.millis() - touchStartMillis) / 1000f;
-      if (timeSinceTouchStart > GameParameters.TAP_OR_DRAG_THRESHOLD){
-        dragging = true;
+      if (timeSinceTouchStart > GameParameters.TAP_OR_DRAG_THRESHOLD) {
+        state = InputState.DRAGGING;
       }
+    }
+    if (state == InputState.DRAGGING) {
+      touchPosition.set(screenX, screenY);
+      relativeTouchPos.set(touchPosition).sub(penguinPosition).limit(GameParameters.MAX_LAUNCH_RADIUS);
+
     }
 
 
@@ -67,40 +74,36 @@ public class InputController extends InputAdapter {
 
   @Override
   public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-    if (pointer!=0 || !touching) return false;
+    if (pointer!=0 || state == InputState.LOCKED) return false;
 
-    touching = false;
-
-    if (dragging){
-      dragListener.onDragReleased(velocityBuffer.x, -velocityBuffer.y);
+    if (state == InputState.TOUCHING || state == InputState.DRAGGING) {
+      aimListener.onAimCancel();
     }
+    state = InputState.IDLE;
 
-
-
-    dragging = false;
-    velocityBuffer.setZero();
     return true;
   }
 
-  public boolean isDragging() {
-    return dragging;
+  public void lockAim() {
+    if (state == InputState.LOCKED) return;
+
+    state = InputState.LOCKED;
+    aimListener.onAimLock(relativeTouchPos.x, relativeTouchPos.y);
+    return;
   }
 
-  public boolean isTouching() {
-    return touching;
+  public void cancelAim() {
+    if (state != InputState.LOCKED) return;
+
+    state = InputState.IDLE;
+    aimListener.onAimCancel();
   }
 
-  public Vector2 getCurrentTouchPos() {
-    return currentTouchPos;
+  public InputState getState() {
+    return state;
   }
 
-  public Vector2 getTouchOrigin() {
-    return touchOrigin;
-  }
 
-  public Vector2 getVelocityBuffer() {
-    return velocityBuffer;
-  }
 
 
   

@@ -7,14 +7,23 @@ import com.assignments.mtnpen.view.states.manager.GameStateManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
+import com.assignments.mtnpen.model.parameters.GameParameters;
+import com.assignments.mtnpen.controller.input.InputController;
+
+import com.badlogic.gdx.InputMultiplexer;
+
 public class GameState extends BaseState {
     private final GameModel model;
     private final GameController controller;
+    private final InputController inputController;
+
+
 
     public GameState(GameStateManager gsm) {
         super(gsm);
         this.model = new GameModel();
         this.controller = new GameController(model, gsm);
+        this.inputController = new InputController(controller);
     }
 
     @Override
@@ -28,6 +37,8 @@ public class GameState extends BaseState {
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             controller.onGameFinished("Player 1");
         }
+
+        
     }
 
     @Override
