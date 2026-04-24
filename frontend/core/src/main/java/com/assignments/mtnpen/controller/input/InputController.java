@@ -57,7 +57,7 @@ public class InputController extends InputAdapter {
     if (pointer!=0 || state == InputState.IDLE) return false;
   
     if (state == InputState.TOUCHING) {
-      float timeSinceTouchStart = (TimeUtils.millis() - touchStartMillis) / 1000f;
+      float timeSinceTouchStart = (TimeUtils.millis() - touchStartMillis);
       if (timeSinceTouchStart > GameParameters.TAP_OR_DRAG_THRESHOLD) {
         state = InputState.DRAGGING;
       }
@@ -76,9 +76,6 @@ public class InputController extends InputAdapter {
   public boolean touchUp(int screenX, int screenY, int pointer, int button) {
     if (pointer!=0 || state == InputState.LOCKED) return false;
 
-    if (state == InputState.TOUCHING || state == InputState.DRAGGING) {
-      aimListener.onAimCancel();
-    }
     state = InputState.IDLE;
 
     return true;
@@ -102,6 +99,11 @@ public class InputController extends InputAdapter {
   public InputState getState() {
     return state;
   }
+
+  public Vector2 getRelativeTouchPos() {
+    return relativeTouchPos;
+  }
+
 
 
 
