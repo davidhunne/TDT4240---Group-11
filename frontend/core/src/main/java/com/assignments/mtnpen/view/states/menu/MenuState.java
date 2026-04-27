@@ -86,7 +86,7 @@ public class MenuState extends BaseState {
 
         lobbyCodeField = new TextField(model.getLobbyCode(), skin);
         lobbyCodeField.setMessageText("Enter lobby code");
-        lobbyCodeField.setMaxLength(6);
+        lobbyCodeField.setMaxLength(40);
 
         createLobbyButton = new TextButton("Create Lobby", skin);
         joinLobbyButton = new TextButton("Join Lobby", skin);
@@ -118,7 +118,7 @@ public class MenuState extends BaseState {
         joinLobbyButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                controller.onJoinLobbyClicked(playerNameField.getText().trim(), lobbyCodeField.getText().trim().toUpperCase());
+                controller.onJoinLobbyClicked(playerNameField.getText().trim(), lobbyCodeField.getText().trim());
             }
         });
 

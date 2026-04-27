@@ -5,6 +5,7 @@ import com.assignments.mtnpen.controller.lobby.LobbyController;
 import com.assignments.mtnpen.model.lobby.LobbyModel;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
+import com.assignments.mtnpen.util.ClipboardUtil;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -26,11 +27,15 @@ public class LobbyState extends BaseState {
     private Label lobbyCodeLabel;
     private Label hostLabel;
     private Label statusLabel;
+    private Label copyFeedbackLabel;
 
     private TextButton readyButton;
     private TextButton startGameButton;
     private TextButton leaveLobbyButton;
+    private TextButton copyCodeButton;
     private float pollTimer;
+    private float copyFeedbackTimer = 0f;
+    private static final float COPY_FEEDBACK_DURATION = 1.5f;
 
     public LobbyState(GameStateManager gsm, String playerName, String lobbyCode, boolean isHost) {
         super(gsm);
@@ -78,6 +83,13 @@ public class LobbyState extends BaseState {
                 }
             });
         }
+        
+        if (copyFeedbackTimer > 0) {
+            copyFeedbackTimer -= delta;
+            if (copyFeedbackTimer <= 0) {
+                copyFeedbackLabel.setText("");
+            }
+        }
     }
 
     @Override
@@ -96,14 +108,22 @@ public class LobbyState extends BaseState {
         lobbyCodeLabel = new Label("Lobby Code: " + model.getLobbyCode(), skin);
         hostLabel = new Label("Host: " + (model.getHostName().isEmpty() ? "Waiting..." : model.getHostName()), skin);
         statusLabel = new Label("", skin);
+        copyFeedbackLabel = new Label("", skin);
 
         readyButton = new TextButton("Ready", skin);
         startGameButton = new TextButton("Start Game", skin);
         leaveLobbyButton = new TextButton("Leave Lobby", skin);
+        copyCodeButton = new TextButton("Copy Code", skin);
 
         rootTable.defaults().pad(10).width(320);
         rootTable.add(new Label("Lobby", skin)).padBottom(20).row();
-        rootTable.add(lobbyCodeLabel).row();
+        
+        Table codeRow = new Table();
+        codeRow.add(lobbyCodeLabel).expandX().fillX();
+        codeRow.add(copyCodeButton).width(100).padLeft(10);
+        rootTable.add(codeRow).fillX().row();
+        
+        rootTable.add(copyFeedbackLabel).row();
         rootTable.add(hostLabel).row();
         rootTable.add(new Label("Players:", skin)).padTop(15).row();
         rootTable.add(playerTable).row();
@@ -141,6 +161,15 @@ public class LobbyState extends BaseState {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 controller.onLeaveLobbyClicked();
+            }
+        });
+        
+        copyCodeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ClipboardUtil.copyToClipboard(model.getLobbyCode());
+                copyFeedbackLabel.setText("Copied!");
+                copyFeedbackTimer = COPY_FEEDBACK_DURATION;
             }
         });
     }
