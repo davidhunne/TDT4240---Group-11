@@ -1,3 +1,4 @@
+import com.badlogic.gdx.InputMultiplexer;
 package com.assignments.mtnpen.view.states.game;
 
 import com.assignments.mtnpen.controller.game.GameController;
@@ -44,7 +45,10 @@ public class GameState extends BaseState {
     @Override
     public void create() {
         super.create();
-        Gdx.input.setInputProcessor(inputController);
+        InputMultiplexer inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(inputController);
+        inputMultiplexer.addProcessor(stage);
+        Gdx.input.setInputProcessor(inputMultiplexer);
     }
 
     @Override
@@ -168,6 +172,8 @@ public class GameState extends BaseState {
                 dragAngle = angle;
                 dragVelocity = velocity;
                 showDragPreview = false;
+                dragScreenStart.setZero();
+                dragScreenCurrent.setZero();
 
                 if (model.isCurrentPlayerTurnForUI() && model.getCurrentPhase() == GamePhase.INPUT) {
                     Gdx.app.log("GameState", String.format("Submitting move: angle=%.2f, velocity=%.2f", angle, velocity));
