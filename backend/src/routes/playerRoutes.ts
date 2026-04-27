@@ -5,46 +5,43 @@ import {
   updateDisplayName,
   getLeaderboard,
 } from "../services/playerService";
+import { NotFoundError } from "../errors";
+import {
+  leaderboardQuery,
+  parseOrThrow,
+  updateDisplayNameBody,
+  upsertPlayerBody,
+} from "../schemas";
 
 const router = Router();
 
 // Register or re-identify a player (call on app launch)
 router.post("/", async (req: Request, res: Response) => {
-  const { id, displayName } = req.body;
-  if (!id || !displayName) {
-    res.status(400).json({ error: "id and displayName are required" });
-    return;
-  }
-
+  const { id, displayName } = parseOrThrow(upsertPlayerBody, req.body, "body");
   const player = await getOrCreatePlayer(id, displayName);
   res.json(player);
 });
 
 // Get player by ID
 router.get("/:id", async (req: Request, res: Response) => {
-  const player = await getPlayer(req.params.id as string);
-  if (!player) {
-    res.status(404).json({ error: "Player not found" });
-    return;
-  }
+  const id = req.params.id as string;
+  const player = await getPlayer(id);
+  if (!player) throw new NotFoundError(`Player ${id} not found`);
   res.json(player);
 });
 
 // Update display name
 router.patch("/:id", async (req: Request, res: Response) => {
-  const { displayName } = req.body;
-  if (!displayName) {
-    res.status(400).json({ error: "displayName is required" });
-    return;
-  }
-  await updateDisplayName(req.params.id as string, displayName);
+  const id = req.params.id as string;
+  const { displayName } = parseOrThrow(updateDisplayNameBody, req.body, "body");
+  await updateDisplayName(id, displayName);
   res.json({ success: true });
 });
 
 // Leaderboard
 router.get("/leaderboard/top", async (req: Request, res: Response) => {
-  const limit = parseInt(req.query.limit as string) || 10;
-  const players = await getLeaderboard(limit);
+  const { limit } = parseOrThrow(leaderboardQuery, req.query, "query");
+  const players = await getLeaderboard(limit ?? 10);
   const leaderboard = players.map((p) => ({
     playerId: p.id,
     displayName: p.displayName,
