@@ -7,14 +7,27 @@ import java.util.Stack;
 public class GameStateManager {
     private Stack<State> states;
     private NetworkManager networkManager;
+    private String playerId;
 
-    public GameStateManager() {
+    public GameStateManager(String playerId, String apiBaseUrl) {
         states = new Stack<>();
-        networkManager = new NetworkManager();
+        this.playerId = sanitizePlayerId(playerId);
+        networkManager = new NetworkManager(apiBaseUrl);
     }
 
     public NetworkManager getNetworkManager() {
         return networkManager;
+    }
+
+    public String getPlayerId() {
+        return playerId;
+    }
+
+    private String sanitizePlayerId(String playerId) {
+        if (playerId == null || playerId.trim().isEmpty()) {
+            return "unknown-device";
+        }
+        return playerId.trim();
     }
 
     public void push(State state) {

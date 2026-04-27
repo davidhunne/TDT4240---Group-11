@@ -11,9 +11,9 @@ public class GameState extends BaseState {
     private final GameModel model;
     private final GameController controller;
 
-    public GameState(GameStateManager gsm) {
+    public GameState(GameStateManager gsm, String gameId, String playerId, String playerName) {
         super(gsm);
-        this.model = new GameModel();
+        this.model = new GameModel(gameId, playerId, playerName);
         this.controller = new GameController(model, gsm);
     }
 
@@ -26,18 +26,18 @@ public class GameState extends BaseState {
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            controller.onGameFinished("Player 1");
+            controller.onGameFinished();
         }
     }
 
     @Override
     public void enter() {
-        // TODO: Initialize ECS, Load map, etc.
+        controller.onGameEntered();
     }
 
     @Override
     public void leave() {
-        // TODO: Dispose assets
+        controller.onGameLeft();
     }
 
     @Override
