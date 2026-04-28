@@ -199,6 +199,16 @@ public class GameRenderer {
         shapeRenderer.circle(px, py, s * 0.35f);
     }
 
+    public void renderPlayers(List<PlayerRenderData> players, String highlightedPlayerId) {
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        for (PlayerRenderData player : players) {
+            float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
+            float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
+            boolean isCurrent = highlightedPlayerId != null && highlightedPlayerId.equals(player.playerId);
+            drawPenguin(px, py, player.connected, isCurrent);
+        }
+        shapeRenderer.end();
+
     public void renderPlayers(List<PlayerRenderData> players, String currentPlayerId) {
         if (GameAssetManager.getPenguin1() == null) return;
         batch.setProjectionMatrix(camera.combined);
@@ -220,6 +230,12 @@ public class GameRenderer {
 
         }
         batch.setColor(Color.WHITE);
+            float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
+            float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
+            boolean isCurrent = highlightedPlayerId != null && highlightedPlayerId.equals(player.playerId);
+            worldFont.setColor(isCurrent ? Color.RED : Color.DARK_GRAY);
+            worldFont.draw(batch, player.displayName, px - 8, py + PENGUIN_BODY + 6);
+        }
         batch.end();
         
     }
@@ -244,32 +260,34 @@ public class GameRenderer {
         float radius = 3f + power * 20f;
         shapeRenderer.circle(startWorld.x, startWorld.y, radius);
 
-        float dx = currentWorld.x - startWorld.x;
-        float dy = currentWorld.y - startWorld.y;
+        float dx = startWorld.x - currentWorld.x;
+        float dy = startWorld.y - currentWorld.y;
         float len = (float) Math.sqrt(dx * dx + dy * dy);
         if (len > 1f) {
+            float tipX = startWorld.x + dx;
+            float tipY = startWorld.y + dy;
             float lineWidth = 1.5f + power * 3f;
             float nx = -dy / len * lineWidth / 2f;
             float ny = dx / len * lineWidth / 2f;
             shapeRenderer.triangle(
                     startWorld.x + nx, startWorld.y + ny,
                     startWorld.x - nx, startWorld.y - ny,
-                    currentWorld.x, currentWorld.y);
+                    tipX, tipY);
             shapeRenderer.triangle(
                     startWorld.x - nx, startWorld.y - ny,
-                    currentWorld.x + nx, currentWorld.y + ny,
-                    currentWorld.x, currentWorld.y);
+                    tipX + nx, tipY + ny,
+                    tipX, tipY);
 
             float arrowSize = 4f + power * 6f;
             float adx = dx / len;
             float ady = dy / len;
             shapeRenderer.triangle(
-                    currentWorld.x + adx * arrowSize,
-                    currentWorld.y + ady * arrowSize,
-                    currentWorld.x - adx * arrowSize * 0.3f + ny,
-                    currentWorld.y - ady * arrowSize * 0.3f - nx,
-                    currentWorld.x - adx * arrowSize * 0.3f - ny,
-                    currentWorld.y - ady * arrowSize * 0.3f + nx);
+                    tipX + adx * arrowSize,
+                    tipY + ady * arrowSize,
+                    tipX - adx * arrowSize * 0.3f + ny,
+                    tipY - ady * arrowSize * 0.3f - nx,
+                    tipX - adx * arrowSize * 0.3f - ny,
+                    tipY - ady * arrowSize * 0.3f + nx);
         }
 
         shapeRenderer.end();

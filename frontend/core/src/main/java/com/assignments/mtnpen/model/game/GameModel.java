@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 public class GameModel {
+    private static final int BOARD_LIMIT = 99;
+    private static final float MAX_INPUT_VELOCITY = 50f;
+    private static final float MAX_MOVE_DISTANCE_CELLS = 20f;
+
     private String gameId;
     private String playerId;
     private String playerName;
@@ -140,6 +144,7 @@ public class GameModel {
         currentMoveVelocity = velocity;
         hasPendingMove = true;
         phaseTimer = 0f;
+        updatePhaseFromStatus();
     }
     
     public boolean hasMove() {
@@ -150,6 +155,8 @@ public class GameModel {
         hasPendingMove = false;
         currentMoveAngle = 0f;
         currentMoveVelocity = 0f;
+        phaseTimer = 0f;
+        updatePhaseFromStatus();
     }
     
     public int[] getTargetPosition(float angle, float velocity) {
@@ -157,12 +164,13 @@ public class GameModel {
         int startX = current != null ? current.positionX : 0;
         int startY = current != null ? current.positionY : 0;
 
-        int distance = Math.round(velocity * 0.4f);
+        float power = Math.max(0f, Math.min(velocity / MAX_INPUT_VELOCITY, 1f));
+        int distance = Math.round(power * MAX_MOVE_DISTANCE_CELLS);
         int x = startX + Math.round(distance * (float) Math.cos(angle));
         int y = startY + Math.round(distance * (float) Math.sin(angle));
 
-        x = Math.max(0, Math.min(99, x));
-        y = Math.max(0, Math.min(99, y));
+        x = Math.max(0, Math.min(BOARD_LIMIT, x));
+        y = Math.max(0, Math.min(BOARD_LIMIT, y));
 
         return new int[]{x, y};
     }
