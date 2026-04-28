@@ -46,7 +46,6 @@ public class GameModel {
         gameStatus = gameJson.getString("status", "in_progress");
         currentTurnIndex = gameJson.getInt("currentTurnIndex", 0);
         
-        // Parse players
         players.clear();
         playersByIdCache.clear();
         JsonValue playersArray = gameJson.get("players");
@@ -69,7 +68,6 @@ public class GameModel {
             }
         }
         
-        // Parse turn order
         turnOrder.clear();
         JsonValue turnArray = gameJson.get("turnOrder");
         if (turnArray != null) {
@@ -78,10 +76,7 @@ public class GameModel {
             }
         }
         
-        // Parse board state
         parseBoard(gameJson.get("boardState"));
-        
-        // Update phase based on game status and current player
         updatePhaseFromStatus();
     }
     
@@ -91,7 +86,6 @@ public class GameModel {
         obstacles.clear();
         boosts.clear();
         
-        // Parse obstacles
         JsonValue obstaclesArray = boardJson.get("obstacles");
         if (obstaclesArray != null) {
             for (JsonValue obs : obstaclesArray) {
@@ -102,7 +96,6 @@ public class GameModel {
             }
         }
         
-        // Parse boosts
         JsonValue boostsArray = boardJson.get("boosts");
         if (boostsArray != null) {
             for (JsonValue boost : boostsArray) {
@@ -122,7 +115,6 @@ public class GameModel {
             if (hasPendingMove) {
                 currentPhase = GamePhase.RESOLVING;
             } else if (isCurrentPlayerTurn()) {
-                // Only reset timer when switching INTO input phase
                 if (currentPhase != GamePhase.INPUT) {
                     phaseTimer = 0f;
                 }
@@ -160,16 +152,11 @@ public class GameModel {
         currentMoveVelocity = 0f;
     }
     
-    /**
-     * Convert angle and velocity to target board position.
-     * Assumes penguin starts at position (0, 0).
-     */
     public int[] getTargetPosition(float angle, float velocity) {
-        int distance = Math.round(velocity * 10); // Scale velocity to board distance
+        int distance = Math.round(velocity * 10);
         int x = Math.round(distance * (float)Math.cos(angle));
         int y = Math.round(distance * (float)Math.sin(angle));
         
-        // Clamp to board bounds (100x100)
         x = Math.max(0, Math.min(99, x));
         y = Math.max(0, Math.min(99, y));
         

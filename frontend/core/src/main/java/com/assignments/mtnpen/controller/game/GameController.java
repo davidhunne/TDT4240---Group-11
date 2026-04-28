@@ -87,6 +87,7 @@ public class GameController {
                         int currentTurnIndex = model.getCurrentTurnIndex();
                         if (currentTurnIndex != previousTurnIndex) {
                             moveSubmitted = false;
+                            model.clearMove();
                             lastTurnIndex = currentTurnIndex;
                         }
 

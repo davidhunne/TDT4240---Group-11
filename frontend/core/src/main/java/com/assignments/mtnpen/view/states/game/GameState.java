@@ -107,10 +107,10 @@ public class GameState extends BaseState {
 
         update(delta);
 
-        // Render game board in world coordinates
         renderer.beginRender();
 
         renderer.renderBoard();
+        renderer.renderFinishFlag();
         renderer.renderObstacles(model.getObstacles());
         renderer.renderBoosts(model.getBoosts());
 
@@ -133,11 +133,9 @@ public class GameState extends BaseState {
 
         renderer.endRender();
 
-        // Update and draw stage (scene2d UI)
         stage.act(delta);
         stage.draw();
 
-        // Render HUD in screen coordinates
         GameModel.PlayerData currentPlayer = model.getCurrentPlayer();
         int score = currentPlayer != null ? currentPlayer.score : 0;
         ui.render(

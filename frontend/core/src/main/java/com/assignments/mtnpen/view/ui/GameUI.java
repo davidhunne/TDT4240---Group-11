@@ -62,7 +62,6 @@ public class GameUI {
         batch.setProjectionMatrix(hudCamera.combined);
         batch.begin();
 
-        // Phase text
         String phaseText;
         if (moveSubmitted && phase == GamePhase.RESOLVING) {
             phaseText = "Move submitted! Waiting for results...";
@@ -73,7 +72,6 @@ public class GameUI {
         }
         titleFont.draw(batch, phaseText, 20, screenHeight - 24);
 
-        // Timer countdown text
         if (phase == GamePhase.INPUT && timeout > 0) {
             float timeRemaining = Math.max(0, timeout - phaseTimer);
             font.setColor(timeRemaining < 10f ? Color.RED : Color.WHITE);
@@ -81,12 +79,10 @@ public class GameUI {
             font.draw(batch, timeText, screenWidth - 120, screenHeight - 28);
         }
 
-        // Player info at bottom-left
         font.setColor(Color.WHITE);
         font.draw(batch, "Player: " + playerName, 10, 50);
         font.draw(batch, "Score: " + score, 10, 30);
 
-        // Current drag input display at bottom-right
         if (velocityInput > 0) {
             font.setColor(Color.YELLOW);
             String inputText = String.format("Angle: %.1f\u00B0 | Power: %.1f",
