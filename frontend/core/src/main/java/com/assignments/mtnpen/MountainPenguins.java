@@ -2,6 +2,7 @@ package com.assignments.mtnpen;
 
 import com.assignments.mtnpen.network.DeviceIdProvider;
 import com.assignments.mtnpen.network.NetworkManager;
+import com.assignments.mtnpen.view.states.game.GameState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
 import com.assignments.mtnpen.view.states.menu.MenuState;
 import com.badlogic.gdx.ApplicationAdapter;
@@ -34,7 +35,7 @@ public class MountainPenguins extends ApplicationAdapter {
     @Override
     public void create() {
         gsm = new GameStateManager(deviceIdProvider.getDeviceId(), apiBaseUrl);
-        gsm.set(new MenuState(gsm));
+        gsm.set(new GameState(gsm, "10", "10", "10"));
     }
 
     @Override

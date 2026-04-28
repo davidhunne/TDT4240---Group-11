@@ -11,6 +11,11 @@ public class GameModel {
     private float launchVelocityX = 0;
     private float launchVelocityY = 0;
 
+    private float penguinPositionX = 0;
+    private float penguinPositionY = 0;
+
+
+
     public GameModel(String gameId, String playerId, String playerName) {
         this.gameId = gameId;
         this.playerId = playerId;
@@ -62,4 +67,13 @@ public class GameModel {
         this.launchVelocityX = vx;
         this.launchVelocityY = vy;
     }
+
+    public float getPenguinPositionX() {
+        return penguinPositionX;
+    }
+    public float getPenguinPositionY() {
+        return penguinPositionY;
+    }
+
+
 }
