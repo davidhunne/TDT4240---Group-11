@@ -125,6 +125,11 @@ public class GameState extends BaseState {
 
         update(delta);
 
+        GameModel.PlayerData localPlayer = model.getCurrentPlayer();
+        if (localPlayer != null) {
+            renderer.setFollowTargetCell(localPlayer.positionX, localPlayer.positionY);
+        }
+
         renderer.beginRender();
 
         renderer.renderBoard();
@@ -133,9 +138,11 @@ public class GameState extends BaseState {
         renderer.renderBoosts(model.getBoosts());
 
         java.util.List<GameRenderer.PlayerRenderData> playerRenderData = new java.util.ArrayList<>();
-        for (GameModel.PlayerData pd : model.getPlayers()) {
+        java.util.List<GameModel.PlayerData> allPlayers = model.getPlayers();
+        for (int i = 0; i < allPlayers.size(); i++) {
+            GameModel.PlayerData pd = allPlayers.get(i);
             playerRenderData.add(new GameRenderer.PlayerRenderData(
-                    pd.playerId, pd.displayName, pd.positionX, pd.positionY, pd.score, pd.connected));
+                    pd.playerId, pd.displayName, pd.positionX, pd.positionY, pd.score, pd.connected, i));
         }
         renderer.renderPlayers(playerRenderData, model.getCurrentTurnPlayerId());
 

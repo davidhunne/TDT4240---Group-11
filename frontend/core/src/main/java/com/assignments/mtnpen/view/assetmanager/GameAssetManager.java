@@ -23,7 +23,15 @@ public final class GameAssetManager {
         // Preload assets if necessary
         //manager.load(AssetPaths.UI_SKIN, Skin.class);
         manager.load(AssetPaths.PENGUIN1, Texture.class);
+        for (String skin : AssetPaths.PLAYER_SKINS) {
+            manager.load(skin, Texture.class);
+        }
         manager.finishLoading();
+
+        for (String skin : AssetPaths.PLAYER_SKINS) {
+            Texture t = manager.get(skin, Texture.class);
+            t.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        }
 
         loaded = true;
     }
@@ -38,6 +46,14 @@ public final class GameAssetManager {
 
     public static Texture getPenguin1() {
         return manager.get(AssetPaths.PENGUIN1, Texture.class);
+    }
+
+    public static Texture getPlayerSkin(int index) {
+        if (AssetPaths.PLAYER_SKINS.length == 0) {
+            return getPenguin1();
+        }
+        int safeIndex = Math.floorMod(index, AssetPaths.PLAYER_SKINS.length);
+        return manager.get(AssetPaths.PLAYER_SKINS[safeIndex], Texture.class);
     }
 
     private static Skin createDefaultUiSkin() {

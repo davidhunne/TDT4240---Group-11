@@ -10,6 +10,13 @@ public final class AssetPaths {
     public static final String PENGUIN_MOVE = "penguinmove.png";
     public static final String PENGUIN2 = "penguin2.png";
 
+    public static final String[] PLAYER_SKINS = {
+            "player1.png",
+            "player2.png",
+            "player3.png",
+            "player4.png"
+    };
+
     private AssetPaths() {
     }
 }
