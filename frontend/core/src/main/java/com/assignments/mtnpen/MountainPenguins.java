@@ -35,7 +35,7 @@ public class MountainPenguins extends ApplicationAdapter {
     @Override
     public void create() {
         gsm = new GameStateManager(deviceIdProvider.getDeviceId(), apiBaseUrl);
-        gsm.set(new GameState(gsm, "10", "10", "10"));
+        gsm.set(new MenuState(gsm));
     }
 
     @Override

@@ -1,5 +1,7 @@
-import com.badlogic.gdx.InputMultiplexer;
 package com.assignments.mtnpen.view.states.game;
+
+import com.badlogic.gdx.InputMultiplexer;
+
 
 import com.assignments.mtnpen.controller.game.GameController;
 import com.assignments.mtnpen.controller.input.InputController;
