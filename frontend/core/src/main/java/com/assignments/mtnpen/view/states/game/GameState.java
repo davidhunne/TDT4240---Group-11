@@ -31,9 +31,9 @@ public class GameState extends BaseState {
 
 
 
-    public GameState(GameStateManager gsm) {
+    public GameState(GameStateManager gsm, String gameId, String playerId, String playerName) {
         super(gsm);
-        this.model = new GameModel();
+        this.model = new GameModel(gameId, playerId, playerName);
         this.controller = new GameController(model, gsm);
         this.inputController = new InputController(controller);
     }
@@ -59,7 +59,7 @@ public class GameState extends BaseState {
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            controller.onGameFinished("Player 1");
+            controller.onGameFinished();
         }
 
         Vector2 screenPos = worldToScreen(model.getPenguinPositionX(), model.getPenguinPositionY());
@@ -71,18 +71,26 @@ public class GameState extends BaseState {
 
     @Override
     public void enter() {
+<<<<<<< HEAD
         // TODO: Initialize ECS, Load map, etc.
         InputMultiplexer multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(inputController);
         multiplexer.addProcessor(stage); // For handling back key, etc.
         Gdx.input.setInputProcessor(multiplexer);
+=======
+        controller.onGameEntered();
+>>>>>>> main
     }
 
     @Override
     public void leave() {
+<<<<<<< HEAD
         // TODO: Dispose assets
         shapeRenderer.dispose();
         super.leave();
+=======
+        controller.onGameLeft();
+>>>>>>> main
     }
 
     @Override

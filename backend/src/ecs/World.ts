@@ -18,8 +18,8 @@ import { Game, GamePlayer } from "../types";
 export interface SerializedBoard {
   width: number;
   height: number;
-  obstacles: Array<[number, number]>;
-  boosts: Array<[number, number, number]>; // x, y, amount
+  obstacles: Array<{ x: number; y: number }>;
+  boosts: Array<{ x: number; y: number; amount: number }>;
 }
 
 export function isSerializedBoard(
@@ -85,14 +85,19 @@ export class World {
     const world = new GameWorld(game.id);
 
     if (isSerializedBoard(game.boardState)) {
-      for (const [x, y] of game.boardState.obstacles) {
+      for (const tile of game.boardState.obstacles) {
+        const { x, y } = normalizeObstacleTile(tile);
+        if (x === undefined || y === undefined) continue;
         const e = world.createEntity();
         world.addComponent<PositionComponent>(e, COMPONENTS.Position, { x, y });
         world.addComponent<ObstacleComponent>(e, COMPONENTS.Obstacle, {
           blocks: true,
         });
       }
-      for (const [x, y, amount] of game.boardState.boosts) {
+      for (const tile of game.boardState.boosts) {
+        const { x, y, amount } = normalizeBoostTile(tile);
+        if (x === undefined || y === undefined || amount === undefined)
+          continue;
         const e = world.createEntity();
         world.addComponent<PositionComponent>(e, COMPONENTS.Position, { x, y });
         world.addComponent<BoostComponent>(e, COMPONENTS.Boost, { amount });
@@ -157,17 +162,18 @@ export class World {
    * Player entities are excluded — they are persisted via Game.players.
    */
   serializeBoard(world: GameWorld): SerializedBoard {
-    const obstacles: Array<[number, number]> = [];
+    const obstacles: Array<{ x: number; y: number }> = [];
     for (const e of world.query(COMPONENTS.Obstacle, COMPONENTS.Position)) {
       const pos = world.getComponent<PositionComponent>(e, COMPONENTS.Position);
-      if (pos) obstacles.push([pos.x, pos.y]);
+      if (pos) obstacles.push({ x: pos.x, y: pos.y });
     }
 
-    const boosts: Array<[number, number, number]> = [];
+    const boosts: Array<{ x: number; y: number; amount: number }> = [];
     for (const e of world.query(COMPONENTS.Boost, COMPONENTS.Position)) {
       const pos = world.getComponent<PositionComponent>(e, COMPONENTS.Position);
       const boost = world.getComponent<BoostComponent>(e, COMPONENTS.Boost);
-      if (pos && boost) boosts.push([pos.x, pos.y, boost.amount]);
+      if (pos && boost)
+        boosts.push({ x: pos.x, y: pos.y, amount: boost.amount });
     }
 
     return {
@@ -203,4 +209,37 @@ export class World {
       }
     }
   }
+}
+
+function normalizeObstacleTile(
+  tile: unknown,
+): { x?: number; y?: number } {
+  if (Array.isArray(tile)) {
+    return { x: tile[0], y: tile[1] };
+  }
+  if (tile && typeof tile === "object") {
+    const t = tile as { x?: unknown; y?: unknown };
+    return {
+      x: typeof t.x === "number" ? t.x : undefined,
+      y: typeof t.y === "number" ? t.y : undefined,
+    };
+  }
+  return {};
+}
+
+function normalizeBoostTile(
+  tile: unknown,
+): { x?: number; y?: number; amount?: number } {
+  if (Array.isArray(tile)) {
+    return { x: tile[0], y: tile[1], amount: tile[2] };
+  }
+  if (tile && typeof tile === "object") {
+    const t = tile as { x?: unknown; y?: unknown; amount?: unknown };
+    return {
+      x: typeof t.x === "number" ? t.x : undefined,
+      y: typeof t.y === "number" ? t.y : undefined,
+      amount: typeof t.amount === "number" ? t.amount : undefined,
+    };
+  }
+  return {};
 }

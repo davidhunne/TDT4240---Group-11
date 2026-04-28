@@ -2,6 +2,8 @@
 .gradle/
 gradle-app.setting
 /build/
+/frontend/.gradle/
+/frontend/build/
 /android/build/
 /core/build/
 /lwjgl2/build/
@@ -13,6 +15,17 @@ gradle-app.setting
 /headless/build/
 /server/build/
 /shared/build/
+/frontend/android/build/
+/frontend/core/build/
+/frontend/lwjgl2/build/
+/frontend/lwjgl3/build/
+/frontend/html/build/
+/frontend/teavm/build/
+/frontend/ios/build/
+/frontend/ios-moe/build/
+/frontend/headless/build/
+/frontend/server/build/
+/frontend/shared/build/
 
 ## Java:
 *.class
@@ -154,6 +167,7 @@ Thumbs.db
 *#*#
 /.kotlin/
 /assets/assets.txt
+/frontend/assets/assets.txt
 
 ## Special cases:
 
