@@ -26,6 +26,7 @@ public class InputController implements InputProcessor {
     private boolean isDragging = false;
     private Vector2 dragStart = new Vector2();
     private Vector2 dragCurrent = new Vector2();
+    private Vector2 penguinPosition = new Vector2();
     
     private static final float MAX_DRAG_DISTANCE = 200f;
     private static final float VELOCITY_SCALE = 50f;
