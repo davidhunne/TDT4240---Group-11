@@ -185,8 +185,8 @@ export async function startGame(gameId: string, hostId: string): Promise<Game> {
     throw new ForbiddenError("Only the host can start the game");
   if (game.status !== "lobby")
     throw new ConflictError("Game is not in lobby state");
-  if (game.players.length < 1)
-    throw new ValidationError("Need at least 1 player to start");
+  if (game.players.length < 2)
+    throw new ValidationError("Need at least 2 players to start");
 
   game.status = "in_progress";
   game.currentTurnIndex = 0;

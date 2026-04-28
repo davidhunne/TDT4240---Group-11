@@ -1,7 +1,7 @@
 # MountainPenguin
 
 > **Important**
-> To the examiner: Paste the environment variables that was in the deliverable. If you do not need to test the backend locally, you can leave the frontend API URL unchanged and run the frontend alone, it will then use the deployed Vercel backend.
+> To the examiner: Paste the environment variables that was in the deliverable. If you do not need to test the backend locally, you can leave the frontend API URL unchanged and run the frontend alone, it will then use the deployed Vercel backend. The game requires 2+ players in order to play.
 
 MountainPenguin is split into two runnable parts:
 

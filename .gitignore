@@ -1,7 +1,8 @@
 ## Gradle:
-gradlew
-.gradle/
-gradle-app.setting
+/frontend/gradlew
+/frontend/.gradle/
+/frontend/gradle-app.setting
+/frontend/.gradle-local/
 /build/
 /frontend/.gradle/
 /frontend/build/

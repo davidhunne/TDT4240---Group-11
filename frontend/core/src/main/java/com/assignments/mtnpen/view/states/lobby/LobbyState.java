@@ -35,6 +35,7 @@ public class LobbyState extends BaseState {
     private Label copyFeedbackLabel;
     private Label hostLabel;
     private Label codeLabel;
+    private Label requirementLabel;
 
     private TextButton readyButton;
     private TextButton startGameButton;
@@ -72,11 +73,23 @@ public class LobbyState extends BaseState {
 
     private void updateStatusLabel() {
         if (model.isHost()) {
-            statusLabel.setText("You are the host. Wait for penguins, then start the race.");
+            if (model.hasEnoughPlayersToStart()) {
+                statusLabel.setText("You have enough racers. Start the race when everyone is ready.");
+            } else {
+                int playersNeeded = model.getPlayersNeededToStart();
+                statusLabel.setText("At least 2 racers are required to start. Waiting for "
+                        + playersNeeded + " more " + (playersNeeded == 1 ? "player." : "players."));
+            }
         } else {
-            statusLabel.setText(model.isReady()
-                    ? "Ready! Waiting for the host..."
-                    : "Waiting for the host to launch the race");
+            if (model.hasEnoughPlayersToStart()) {
+                statusLabel.setText(model.isReady()
+                        ? "Ready! Waiting for the host to start the race."
+                        : "The lobby is ready. Waiting for the host to start the race.");
+            } else {
+                int playersNeeded = model.getPlayersNeededToStart();
+                statusLabel.setText("The race unlocks at 2 players. Waiting for "
+                        + playersNeeded + " more " + (playersNeeded == 1 ? "player." : "players."));
+            }
         }
     }
 
@@ -143,6 +156,11 @@ public class LobbyState extends BaseState {
         playerListTable.defaults().pad(6f);
         playersCard.add(playerListTable).width(440f).minHeight(180f).row();
 
+        requirementLabel = new Label("", skin, "muted");
+        requirementLabel.setWrap(true);
+        requirementLabel.setAlignment(Align.left);
+        playersCard.add(requirementLabel).width(440f).left().padTop(10f).row();
+
         // Action button
         if (model.isHost()) {
             startGameButton = new TextButton("START THE RACE", skin, "gold");
@@ -199,6 +217,9 @@ public class LobbyState extends BaseState {
             startGameButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
+                    if (startGameButton.isDisabled()) {
+                        return;
+                    }
                     controller.onStartGameClicked();
                 }
             });
@@ -232,6 +253,23 @@ public class LobbyState extends BaseState {
         if (model.getPlayers().isEmpty()) {
             Label empty = new Label("Waiting for penguins to join...", skin, "muted");
             playerListTable.add(empty).pad(20f).row();
+        }
+
+        updateLobbyRequirementUi();
+    }
+
+    private void updateLobbyRequirementUi() {
+        int playerCount = model.getPlayerCount();
+        if (model.hasEnoughPlayersToStart()) {
+            requirementLabel.setText("Race unlocked: " + playerCount + " racers in the lobby.");
+        } else {
+            int playersNeeded = model.getPlayersNeededToStart();
+            requirementLabel.setText("Need at least 2 racers to start. "
+                    + playersNeeded + " more " + (playersNeeded == 1 ? "player" : "players") + " must join.");
+        }
+
+        if (startGameButton != null) {
+            startGameButton.setDisabled(!model.hasEnoughPlayersToStart());
         }
     }
 

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LobbyModel {
+    public static final int MIN_PLAYERS_TO_START = 2;
+
     private String playerName;
     private String playerId;
     private String lobbyCode;
@@ -53,6 +55,18 @@ public class LobbyModel {
 
     public void setPlayers(List<String> players) {
         this.players = players;
+    }
+
+    public int getPlayerCount() {
+        return players.size();
+    }
+
+    public boolean hasEnoughPlayersToStart() {
+        return getPlayerCount() >= MIN_PLAYERS_TO_START;
+    }
+
+    public int getPlayersNeededToStart() {
+        return Math.max(0, MIN_PLAYERS_TO_START - getPlayerCount());
     }
 
     public boolean isReady() {

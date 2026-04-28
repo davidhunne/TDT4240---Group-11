@@ -27,7 +27,7 @@ public class LobbyController {
     }
 
     public void onStartGameClicked() {
-        if (model.isHost()) {
+        if (model.isHost() && model.hasEnoughPlayersToStart()) {
             gsm.getNetworkManager().startGame(model.getLobbyCode(), model.getPlayerId(), new NetworkManager.NetworkCallback() {
                 @Override
                 public void onSuccess(String response) {

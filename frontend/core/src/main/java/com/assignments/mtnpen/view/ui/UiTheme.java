@@ -74,6 +74,8 @@ public final class UiTheme {
                                 new Color(0.78f, 0.55f, 0.08f, 1f), null, 22, 0);
                 Drawable goldOver = roundedNinePatch(skin, "btn-gold-over",
                                 new Color(1f, 0.86f, 0.30f, 1f), null, 22, 0);
+                Drawable goldDisabled = roundedNinePatch(skin, "btn-gold-disabled",
+                                new Color(0.58f, 0.62f, 0.68f, 1f), null, 22, 0);
 
                 Drawable ghostUp = roundedNinePatch(skin, "btn-ghost-up",
                                 new Color(0.22f, 0.34f, 0.55f, 1f), null, 18, 0);
@@ -119,10 +121,12 @@ public final class UiTheme {
                 gold.down = goldDown;
                 gold.over = goldOver;
                 gold.checked = goldDown;
+                gold.disabled = goldDisabled;
                 gold.font = button;
                 gold.fontColor = ICE_DEEP;
                 gold.downFontColor = ICE_DEEP;
                 gold.overFontColor = ICE_DEEP;
+                gold.disabledFontColor = new Color(0.20f, 0.26f, 0.34f, 1f);
                 skin.add("gold", gold);
 
                 TextButton.TextButtonStyle ghost = new TextButton.TextButtonStyle();
