@@ -375,46 +375,35 @@ public class GameRenderer {
         Vector3 currentWorld = new Vector3(dragCurrentScreen.x, dragCurrentScreen.y, 0);
         camera.unproject(currentWorld);
 
-        float power = Math.min(velocity / maxVelocity, 1f);
+        float power = Math.min(velocity / maxVelocity * 0.7f, 10f);
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        float r = Math.min(power * 2f, 1f);
-        float g = Math.min((1f - power) * 2f, 1f);
-        shapeRenderer.setColor(r, g, 0f, 0.7f);
 
-        float radius = 4f + power * 22f;
+
+        float radius = 4f + power * 10f;
         shapeRenderer.circle(startX, startY, radius);
 
-        float dx = startX - currentWorld.x;
-        float dy = startY - currentWorld.y;
+        float dx = -Math.min(Math.abs(startX - currentWorld.x), 100f)*Math.signum(currentWorld.x - startX);
+        float dy = -Math.min(Math.abs(startY - currentWorld.y), 100f)*Math.signum(currentWorld.y - startY);
         float len = (float) Math.sqrt(dx * dx + dy * dy);
+        
+        float r = Math.min(len/142f * 2f, 1f);
+        float g = Math.min((1f - len/142f) * 2f, 1f);
+        shapeRenderer.setColor(r, g, 0f, 0.7f);
         if (len > 1f) {
             float tipX = startX + dx;
             float tipY = startY + dy;
-            float lineWidth = 2f + power * 4f;
+            float lineWidth = Math.min(1f + power * 10f,40f);
             float nx = -dy / len * lineWidth / 2f;
             float ny = dx / len * lineWidth / 2f;
             shapeRenderer.triangle(
                     startX + nx, startY + ny,
                     startX - nx, startY - ny,
                     tipX, tipY);
-            shapeRenderer.triangle(
-                    startX - nx, startY - ny,
-                    tipX + nx, tipY + ny,
-                    tipX, tipY);
+            }
 
-            float arrowSize = 5f + power * 2f;
-            float adx = dx / len;
-            float ady = dy / len;
-            shapeRenderer.triangle(
-                    tipX + adx * arrowSize,
-                    tipY + ady * arrowSize,
-                    tipX - adx * arrowSize * 0.3f + ny,
-                    tipY - ady * arrowSize * 0.3f - nx,
-                    tipX - adx * arrowSize * 0.3f - ny,
-                    tipY - ady * arrowSize * 0.3f + nx);
-        }
+
 
         shapeRenderer.end();
     }

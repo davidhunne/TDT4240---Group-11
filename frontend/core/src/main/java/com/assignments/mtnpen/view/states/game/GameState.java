@@ -144,8 +144,6 @@ public class GameState extends BaseState {
             playerRenderData.add(new GameRenderer.PlayerRenderData(
                     pd.playerId, pd.displayName, pd.positionX, pd.positionY, pd.score, pd.connected, i));
         }
-        renderer.renderPlayers(playerRenderData, model.getCurrentTurnPlayerId());
-
         if (showDragPreview) {
             renderer.renderDragPreview(
                     inputController.isDragging(),
@@ -156,6 +154,9 @@ public class GameState extends BaseState {
                     50f,
                     model);
         }
+        renderer.renderPlayers(playerRenderData, model.getCurrentTurnPlayerId());
+
+
 
         renderer.endRender();
 
