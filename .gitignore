@@ -28,6 +28,7 @@ gradle-app.setting
 /frontend/server/build/
 /frontend/shared/build/
 
+
 ## Java:
 *.class
 *.war
@@ -36,12 +37,13 @@ hs_err_pid*
 .attach_pid*
 
 ## Android:
-/android/libs/armeabi-v7a/
-/android/libs/arm64-v8a/
-/android/libs/x86/
-/android/libs/x86_64/
-/android/gen/
-/android/out/
+/frontend/android/libs/armeabi-v7a/
+/frontend/android/libs/arm64-v8a/
+/frontend/android/libs/
+/frontend/android/libs/x86/
+/frontend/android/libs/x86_64/
+/frontend/android/gen/
+/frontend/android/out/
 local.properties
 com_crashlytics_export_strings.xml
 
