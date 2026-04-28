@@ -11,7 +11,10 @@ import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 
 import java.util.UUID;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
+/**
+ * {@link com.badlogic.gdx.ApplicationListener} implementation shared by all
+ * platforms.
+ */
 public class MountainPenguins extends ApplicationAdapter {
     private final DeviceIdProvider deviceIdProvider;
     private final String apiBaseUrl;
@@ -27,9 +30,21 @@ public class MountainPenguins extends ApplicationAdapter {
     }
 
     public static class DesktopDeviceIdProvider implements DeviceIdProvider {
+        private static final String CACHED_ID = resolveId();
+
         @Override
         public String getDeviceId() {
-            return "desktop-" + UUID.nameUUIDFromBytes(System.getProperty("user.name", "player").getBytes()).toString();
+            return CACHED_ID;
+        }
+
+        private static String resolveId() {
+            String override = System.getProperty("mtnpen.deviceId");
+            if (override != null && !override.isEmpty()) {
+                return override;
+            }
+            // Makes it possible to have multiple desktop instances with different IDs, but
+            // still have a stable ID across runs for each instance.
+            return "desktop-" + UUID.randomUUID();
         }
     }
 

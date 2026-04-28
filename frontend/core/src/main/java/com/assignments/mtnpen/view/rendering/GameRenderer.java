@@ -404,7 +404,7 @@ public class GameRenderer {
                     tipX + nx, tipY + ny,
                     tipX, tipY);
 
-            float arrowSize = 5f + power * 7f;
+            float arrowSize = 5f + power * 2f;
             float adx = dx / len;
             float ady = dy / len;
             shapeRenderer.triangle(
