@@ -194,12 +194,12 @@ public class GameRenderer {
         shapeRenderer.circle(px, py, s * 0.35f);
     }
 
-    public void renderPlayers(List<PlayerRenderData> players, String currentPlayerId) {
+    public void renderPlayers(List<PlayerRenderData> players, String highlightedPlayerId) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         for (PlayerRenderData player : players) {
             float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
             float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
-            boolean isCurrent = currentPlayerId.equals(player.playerId);
+            boolean isCurrent = highlightedPlayerId != null && highlightedPlayerId.equals(player.playerId);
             drawPenguin(px, py, player.connected, isCurrent);
         }
         shapeRenderer.end();
@@ -209,7 +209,7 @@ public class GameRenderer {
         for (PlayerRenderData player : players) {
             float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
             float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
-            boolean isCurrent = currentPlayerId.equals(player.playerId);
+            boolean isCurrent = highlightedPlayerId != null && highlightedPlayerId.equals(player.playerId);
             worldFont.setColor(isCurrent ? Color.RED : Color.DARK_GRAY);
             worldFont.draw(batch, player.displayName, px - 8, py + PENGUIN_BODY + 6);
         }
@@ -289,8 +289,8 @@ public class GameRenderer {
         float radius = 3f + power * 20f;
         shapeRenderer.circle(startWorld.x, startWorld.y, radius);
 
-        float dx = currentWorld.x - startWorld.x;
-        float dy = currentWorld.y - startWorld.y;
+        float dx = startWorld.x - currentWorld.x;
+        float dy = startWorld.y - currentWorld.y;
         float len = (float) Math.sqrt(dx * dx + dy * dy);
         if (len > 1f) {
             float lineWidth = 1.5f + power * 3f;

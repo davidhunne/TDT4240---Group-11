@@ -5,6 +5,7 @@ import com.assignments.mtnpen.controller.game.GameController;
 import com.assignments.mtnpen.controller.input.InputController;
 import com.assignments.mtnpen.model.game.GameModel;
 import com.assignments.mtnpen.model.game.GamePhase;
+import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 import com.assignments.mtnpen.view.rendering.GameRenderer;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
@@ -14,6 +15,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 public class GameState extends BaseState {
     private final GameModel model;
@@ -22,6 +28,9 @@ public class GameState extends BaseState {
     private final GameRenderer renderer;
     private final GameUI ui;
     private InputMultiplexer inputMultiplexer;
+    private Skin skin;
+    private Table overlayTable;
+    private TextButton exitGameButton;
 
     private float initialPollDelay = 1f;
     private boolean gameStateLoaded = false;
@@ -47,9 +56,11 @@ public class GameState extends BaseState {
     @Override
     public void create() {
         super.create();
+        skin = GameAssetManager.loadUiSkin();
+        buildUi();
         inputMultiplexer = new InputMultiplexer();
-        inputMultiplexer.addProcessor(inputController);
         inputMultiplexer.addProcessor(stage);
+        inputMultiplexer.addProcessor(inputController);
         Gdx.input.setInputProcessor(inputMultiplexer);
     }
 
@@ -85,8 +96,8 @@ public class GameState extends BaseState {
         controller.onGameEntered();
         if (inputMultiplexer == null) {
             inputMultiplexer = new InputMultiplexer();
-            inputMultiplexer.addProcessor(inputController);
             inputMultiplexer.addProcessor(stage);
+            inputMultiplexer.addProcessor(inputController);
         }
         Gdx.input.setInputProcessor(inputMultiplexer);
     }
@@ -97,6 +108,9 @@ public class GameState extends BaseState {
         Gdx.input.setInputProcessor(null);
         renderer.dispose();
         ui.dispose();
+        if (skin != null) {
+            skin.dispose();
+        }
         super.leave();
     }
 
@@ -119,7 +133,7 @@ public class GameState extends BaseState {
             playerRenderData.add(new GameRenderer.PlayerRenderData(
                     pd.playerId, pd.displayName, pd.positionX, pd.positionY, pd.score, pd.connected));
         }
-        renderer.renderPlayers(playerRenderData, model.getPlayerId());
+        renderer.renderPlayers(playerRenderData, model.getCurrentTurnPlayerId());
 
         if (showDragPreview) {
             renderer.renderDragPreview(
@@ -153,6 +167,24 @@ public class GameState extends BaseState {
     public void resize(int width, int height) {
         super.resize(width, height);
         renderer.updateCamera(width, height);
+    }
+
+    private void buildUi() {
+        overlayTable = new Table();
+        overlayTable.setFillParent(true);
+        overlayTable.top().right();
+        overlayTable.pad(20f);
+
+        exitGameButton = new TextButton("Exit Game", skin);
+        exitGameButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                handleExit();
+            }
+        });
+
+        overlayTable.add(exitGameButton).width(160f).height(44f);
+        stage.addActor(overlayTable);
     }
 
     private InputController.InputCallback createInputCallback() {
@@ -199,7 +231,6 @@ public class GameState extends BaseState {
     }
 
     private void handleExit() {
-        controller.onGameLeft();
         gsm.set(new MenuState(gsm));
     }
 }

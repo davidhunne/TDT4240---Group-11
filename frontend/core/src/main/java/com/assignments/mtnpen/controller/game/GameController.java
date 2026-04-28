@@ -59,10 +59,7 @@ public class GameController {
                     @Override
                     public void onError(Throwable t) {
                         Gdx.app.log("GameController", "Move submission failed: " + t.getMessage());
-                        Gdx.app.postRunnable(() -> {
-                            moveSubmitted = false;
-                            model.clearMove();
-                        });
+                        Gdx.app.postRunnable(() -> resetSubmittedMove());
                     }
                 });
     }
@@ -87,13 +84,14 @@ public class GameController {
                         int previousTurnIndex = lastTurnIndex;
                         model.updateFromServerState(gameJson);
 
-                        // Reset move submission flag when a new turn begins
                         int currentTurnIndex = model.getCurrentTurnIndex();
-                        if (currentTurnIndex != previousTurnIndex) {
-                            moveSubmitted = false;
-                            model.clearMove();
+                        if (previousTurnIndex >= 0 && currentTurnIndex != previousTurnIndex) {
+                            resetSubmittedMove();
+                        } else if (previousTurnIndex < 0) {
                             lastTurnIndex = currentTurnIndex;
                         }
+
+                        lastTurnIndex = currentTurnIndex;
 
                         // Transition to results if game finished
                         if ("finished".equals(model.getGameStatus()) && !previousStatus.equals("finished")) {
@@ -114,6 +112,11 @@ public class GameController {
 
     public void onGameFinished() {
         handleGameFinished();
+    }
+
+    private void resetSubmittedMove() {
+        moveSubmitted = false;
+        model.clearMove();
     }
 
     private void handleGameFinished() {
