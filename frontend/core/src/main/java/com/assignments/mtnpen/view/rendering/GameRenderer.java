@@ -293,28 +293,30 @@ public class GameRenderer {
         float dy = startWorld.y - currentWorld.y;
         float len = (float) Math.sqrt(dx * dx + dy * dy);
         if (len > 1f) {
+            float tipX = startWorld.x + dx;
+            float tipY = startWorld.y + dy;
             float lineWidth = 1.5f + power * 3f;
             float nx = -dy / len * lineWidth / 2f;
             float ny = dx / len * lineWidth / 2f;
             shapeRenderer.triangle(
                     startWorld.x + nx, startWorld.y + ny,
                     startWorld.x - nx, startWorld.y - ny,
-                    currentWorld.x, currentWorld.y);
+                    tipX, tipY);
             shapeRenderer.triangle(
                     startWorld.x - nx, startWorld.y - ny,
-                    currentWorld.x + nx, currentWorld.y + ny,
-                    currentWorld.x, currentWorld.y);
+                    tipX + nx, tipY + ny,
+                    tipX, tipY);
 
             float arrowSize = 4f + power * 6f;
             float adx = dx / len;
             float ady = dy / len;
             shapeRenderer.triangle(
-                    currentWorld.x + adx * arrowSize,
-                    currentWorld.y + ady * arrowSize,
-                    currentWorld.x - adx * arrowSize * 0.3f + ny,
-                    currentWorld.y - ady * arrowSize * 0.3f - nx,
-                    currentWorld.x - adx * arrowSize * 0.3f - ny,
-                    currentWorld.y - ady * arrowSize * 0.3f + nx);
+                    tipX + adx * arrowSize,
+                    tipY + ady * arrowSize,
+                    tipX - adx * arrowSize * 0.3f + ny,
+                    tipY - ady * arrowSize * 0.3f - nx,
+                    tipX - adx * arrowSize * 0.3f - ny,
+                    tipY - ady * arrowSize * 0.3f + nx);
         }
 
         shapeRenderer.end();
