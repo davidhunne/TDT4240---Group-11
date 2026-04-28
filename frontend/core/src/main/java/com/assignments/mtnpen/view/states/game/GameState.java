@@ -37,7 +37,7 @@ public class GameState extends BaseState {
         super(gsm);
         this.model = new GameModel(gameId, playerId, playerName);
         this.controller = new GameController(model, gsm);
-        this.inputController = new InputController(createInputCallback());
+        this.inputController = new InputController(model, createInputCallback());
         this.renderer = new GameRenderer(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         this.ui = new GameUI(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
@@ -124,7 +124,8 @@ public class GameState extends BaseState {
                     dragScreenCurrent,
                     dragAngle,
                     dragVelocity,
-                    50f);
+                    50f,
+                    model);
         }
 
         renderer.endRender();

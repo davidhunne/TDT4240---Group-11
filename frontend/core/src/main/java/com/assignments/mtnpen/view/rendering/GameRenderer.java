@@ -2,10 +2,15 @@ package com.assignments.mtnpen.view.rendering;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.assignments.mtnpen.model.game.GameModel.PlayerData;
+import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.assignments.mtnpen.model.game.GameModel;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +26,7 @@ public class GameRenderer {
     private static final float BOARD_PIXEL_WIDTH = BOARD_WIDTH * CELL_SIZE;
     private static final float BOARD_PIXEL_HEIGHT = BOARD_HEIGHT * CELL_SIZE;
     
-    private static final float PENGUIN_RADIUS = 2f;
+    private static final float PENGUIN_RADIUS = 40f;
     private static final float OBSTACLE_SIZE = 2f;
     private static final float BOOST_RADIUS = 1.5f;
     private static final float GOAL_SIZE = 3f;
@@ -128,33 +133,40 @@ public class GameRenderer {
     }
     
     public void renderPlayers(List<PlayerRenderData> players, String currentPlayerId) {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        if (GameAssetManager.getPenguin1() == null) return;
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
         
         for (PlayerRenderData player : players) {
             if (!player.connected) {
-                shapeRenderer.setColor(0.5f, 0.5f, 0.5f, 0.5f);
+                batch.setColor(0.5f, 0.5f, 0.5f, 0.5f);
             } else if (currentPlayerId.equals(player.playerId)) {
-                shapeRenderer.setColor(1f, 0.2f, 0.2f, 1f);
+                batch.setColor(1f, 0.2f, 0.2f, 1f);
             } else {
-                shapeRenderer.setColor(0.2f, 0.6f, 1f, 1f);
+                batch.setColor(0.2f, 0.6f, 1f, 1f);
             }
+            batch.draw(GameAssetManager.getPenguin1(), player.position.x - PENGUIN_RADIUS, player.position.y - PENGUIN_RADIUS,
+                    PENGUIN_RADIUS * 2, PENGUIN_RADIUS * 2);
             
-            float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
-            float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
-            shapeRenderer.circle(px, py, PENGUIN_RADIUS);
+
+
+
         }
+        batch.setColor(Color.WHITE);
+        batch.end();
         
-        shapeRenderer.end();
     }
     
     public void renderDragPreview(boolean isDragging, Vector2 dragStart, Vector2 dragCurrent,
-                                   float angle, float velocity, float maxVelocity) {
+                                   float angle, float velocity, float maxVelocity, GameModel model) {
         if (!isDragging) return;
+
+        PlayerData player = model.getCurrentPlayer();
         
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(1f, 1f, 0f, 0.8f);
         
-        shapeRenderer.line(dragStart.x, dragStart.y, dragCurrent.x, dragCurrent.y);
+        shapeRenderer.line(player.positionX, player.positionY, dragCurrent.x, dragCurrent.y);
         
         float radius = (velocity / maxVelocity) * 30f;
         shapeRenderer.circle(dragStart.x, dragStart.y, radius);

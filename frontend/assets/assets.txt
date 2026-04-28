@@ -1,4 +1,5 @@
 Buttonpng.png
 Penguinpng.png
 libgdx.png
+penguin1.png
 settingspng.png

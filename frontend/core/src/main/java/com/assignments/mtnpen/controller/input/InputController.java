@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
 
+
   
 
 import com.badlogic.gdx.Gdx;
@@ -27,6 +28,7 @@ public class InputController implements InputProcessor {
     private Vector2 dragStart = new Vector2();
     private Vector2 dragCurrent = new Vector2();
     private Vector2 penguinPosition = new Vector2();
+    private GameModel model;
     
     private static final float MAX_DRAG_DISTANCE = 200f;
     private static final float VELOCITY_SCALE = 50f;
@@ -38,8 +40,9 @@ public class InputController implements InputProcessor {
         void onMenuButtonPressed();
     }
     
-    public InputController(InputCallback callback) {
+    public InputController(GameModel model,InputCallback callback) {
         this.callback = callback;
+        this.model = model;
     }
     
     @Override
@@ -47,7 +50,7 @@ public class InputController implements InputProcessor {
         if (pointer != 0) return false;
         
         isDragging = true;
-        dragStart.set(screenX, screenY);
+        dragStart.set(model.getCurrentPlayer().positionX, model.getCurrentPlayer().positionY);
         dragCurrent.set(screenX, screenY);
         callback.onDragStart(screenX, screenY);
         return true;
@@ -63,7 +66,7 @@ public class InputController implements InputProcessor {
         float deltaY = dragCurrent.y - dragStart.y;
         float distance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         
-        float angle = (float) Math.atan2(-deltaY, deltaX);
+        float angle = (float) Math.atan2(-deltaY, -deltaX);
         float velocity = Math.min(distance / MAX_DRAG_DISTANCE, 1f) * VELOCITY_SCALE;
         
         callback.onDragUpdate(screenX, screenY, angle, velocity);
@@ -80,7 +83,7 @@ public class InputController implements InputProcessor {
         float deltaY = dragCurrent.y - dragStart.y;
         float distance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         
-        float angle = (float) Math.atan2(-deltaY, deltaX);
+        float angle = (float) Math.atan2(-deltaY, -deltaX);
         float velocity = Math.min(distance / MAX_DRAG_DISTANCE, 1f) * VELOCITY_SCALE;
         
         if (distance > 10) {

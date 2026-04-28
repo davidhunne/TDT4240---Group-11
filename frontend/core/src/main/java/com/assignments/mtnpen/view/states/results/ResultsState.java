@@ -41,7 +41,7 @@ public class ResultsState extends BaseState {
     @Override
     public void create() {
         super.create();
-        skin = GameAssetManager.loadUiSkin(); //TODO: Replace with actual asset
+        skin = GameAssetManager.getUiSkin(); //TODO: Replace with actual asset
         buildUi();
         registerListeners();
     }

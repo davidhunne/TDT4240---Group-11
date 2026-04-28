@@ -7,6 +7,7 @@ import com.assignments.mtnpen.view.states.manager.GameStateManager;
 import com.assignments.mtnpen.view.states.menu.MenuState;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 
 import java.util.UUID;
 
@@ -34,6 +35,7 @@ public class MountainPenguins extends ApplicationAdapter {
 
     @Override
     public void create() {
+        GameAssetManager.loadAssets();
         gsm = new GameStateManager(deviceIdProvider.getDeviceId(), apiBaseUrl);
         gsm.set(new MenuState(gsm));
     }
