@@ -38,6 +38,9 @@ public class GameRenderer {
     private static final float FLAG_HEIGHT = 18f;
     private static final float POLE_HEIGHT = 42f;
 
+    // Width of the mountain border that surrounds the playable area.
+    private static final float BORDER_THICKNESS = 60f;
+
     private float animationTime = 0f;
 
     private final Vector2 followTarget = new Vector2(BOARD_PIXEL_WIDTH / 2f, BOARD_PIXEL_HEIGHT / 2f);
@@ -88,10 +91,13 @@ public class GameRenderer {
         cameraCenter.x += (followTarget.x - cameraCenter.x) * lerp;
         cameraCenter.y += (followTarget.y - cameraCenter.y) * lerp;
 
-        float minX = halfW;
-        float maxX = BOARD_PIXEL_WIDTH - halfW;
-        float minY = halfH;
-        float maxY = BOARD_PIXEL_HEIGHT - halfH;
+        // Allow the camera to move into the mountain border by up to BORDER_THICKNESS,
+        // so a player at the world edge stays roughly centered while the border fills
+        // the remaining off-board area.
+        float minX = halfW - BORDER_THICKNESS;
+        float maxX = BOARD_PIXEL_WIDTH - halfW + BORDER_THICKNESS;
+        float minY = halfH - BORDER_THICKNESS;
+        float maxY = BOARD_PIXEL_HEIGHT - halfH + BORDER_THICKNESS;
         if (maxX < minX) {
             cameraCenter.x = BOARD_PIXEL_WIDTH / 2f;
         } else {
@@ -122,42 +128,229 @@ public class GameRenderer {
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Snowy gradient background
+        // Distant sky behind everything
+        shapeRenderer.setColor(0.65f, 0.78f, 0.94f, 1f);
+        shapeRenderer.rect(left, bottom, camera.viewportWidth, camera.viewportHeight);
+
+        // Snowy gradient over the playable board only
         Color top1 = new Color(0.78f, 0.88f, 1f, 1f);
         Color bot1 = new Color(0.94f, 0.97f, 1f, 1f);
-        shapeRenderer.rect(left, bottom, camera.viewportWidth, camera.viewportHeight,
+        shapeRenderer.rect(0, 0, BOARD_PIXEL_WIDTH, BOARD_PIXEL_HEIGHT,
                 bot1, bot1, top1, top1);
 
-        // Snow drifting
-        shapeRenderer.setColor(1f, 1f, 1f, 0.55f);
-        float driftHeight = camera.viewportHeight * 0.18f;
-        for (int i = 0; i < 3; i++) {
-            float cx = left + camera.viewportWidth * (0.2f + 0.3f * i);
-            float cy = bottom + driftHeight * 0.4f;
-            shapeRenderer.circle(cx, cy, driftHeight * 0.9f);
-        }
-
         shapeRenderer.end();
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(0.62f, 0.74f, 0.92f, 0.35f);
+        // Grid lines inside the playable area only
         float gridStep = CELL_SIZE * 5f;
-        float gridStartX = ((float) Math.floor(left / gridStep)) * gridStep;
-        float gridStartY = ((float) Math.floor(bottom / gridStep)) * gridStep;
-        for (float x = gridStartX; x <= right; x += gridStep) {
-            shapeRenderer.line(x, bottom, x, top);
+        float gridLeft = Math.max(left, 0f);
+        float gridRight = Math.min(right, BOARD_PIXEL_WIDTH);
+        float gridBottom = Math.max(bottom, 0f);
+        float gridTop = Math.min(top, BOARD_PIXEL_HEIGHT);
+        if (gridRight > gridLeft && gridTop > gridBottom) {
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(0.62f, 0.74f, 0.92f, 0.35f);
+            float gridStartX = ((float) Math.floor(gridLeft / gridStep)) * gridStep;
+            float gridStartY = ((float) Math.floor(gridBottom / gridStep)) * gridStep;
+            for (float x = gridStartX; x <= gridRight; x += gridStep) {
+                if (x < 0 || x > BOARD_PIXEL_WIDTH) continue;
+                shapeRenderer.line(x, gridBottom, x, gridTop);
+            }
+            for (float y = gridStartY; y <= gridTop; y += gridStep) {
+                if (y < 0 || y > BOARD_PIXEL_HEIGHT) continue;
+                shapeRenderer.line(gridLeft, y, gridRight, y);
+            }
+            shapeRenderer.end();
         }
-        for (float y = gridStartY; y <= top; y += gridStep) {
-            shapeRenderer.line(left, y, right, y);
+    }
+
+    public void renderMountainBorder() {
+        float bw = BOARD_PIXEL_WIDTH;
+        float bh = BOARD_PIXEL_HEIGHT;
+        float bp = BORDER_THICKNESS;
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        // Hazy base fill in each border strip (slightly darker than the sky)
+        shapeRenderer.setColor(0.48f, 0.6f, 0.78f, 1f);
+        shapeRenderer.rect(-bp, -bp, bw + 2 * bp, bp); // bottom
+        shapeRenderer.rect(-bp, bh, bw + 2 * bp, bp); // top
+        shapeRenderer.rect(-bp, 0, bp, bh); // left
+        shapeRenderer.rect(bw, 0, bp, bh); // right
+
+        // Mountain ranges along each edge
+        // (sx, sy) -> (ex, ey) is the inner edge; (ox, oy) is the outward normal.
+        drawEdgeMountains(0f, 0f, bw, 0f, 0f, -1f, bp);
+        drawEdgeMountains(0f, bh, bw, bh, 0f, 1f, bp);
+        drawEdgeMountains(0f, 0f, 0f, bh, -1f, 0f, bp);
+        drawEdgeMountains(bw, 0f, bw, bh, 1f, 0f, bp);
+
+        shapeRenderer.end();
+    }
+
+    private void drawEdgeMountains(float sx, float sy, float ex, float ey,
+                                    float ox, float oy, float bp) {
+        float dx = ex - sx;
+        float dy = ey - sy;
+        float length = (float) Math.sqrt(dx * dx + dy * dy);
+        if (length <= 0f) return;
+        float tx = dx / length;
+        float ty = dy / length;
+        float spacing = 22f;
+        int count = Math.max(1, (int) (length / spacing));
+        float step = length / count;
+        // Extend one peak beyond each end so corners overlap nicely.
+        int firstI = -1;
+        int lastI = count + 1;
+
+        Color back = new Color(0.55f, 0.6f, 0.78f, 1f);
+        Color front = new Color(0.36f, 0.4f, 0.55f, 1f);
+        Color shade = new Color(0.24f, 0.27f, 0.4f, 1f);
+        Color snow = new Color(0.97f, 0.99f, 1f, 1f);
+
+        // Back row
+        for (int i = firstI; i <= lastI; i++) {
+            float t = i * step;
+            float pkX = sx + tx * t;
+            float pkY = sy + ty * t;
+            float jitter = ((i * 73) % 17) / 17f - 0.5f;
+            float h = bp * (0.85f + 0.15f * jitter);
+            float halfW = step * 0.85f;
+            float baseX = pkX + ox * h;
+            float baseY = pkY + oy * h;
+            shapeRenderer.setColor(back);
+            shapeRenderer.triangle(
+                    pkX, pkY,
+                    baseX - tx * halfW, baseY - ty * halfW,
+                    baseX + tx * halfW, baseY + ty * halfW);
         }
+
+        // Front row
+        for (int i = firstI; i <= lastI; i++) {
+            float t = i * step + step * 0.5f;
+            float pkX = sx + tx * t;
+            float pkY = sy + ty * t;
+            float jitter = ((i * 41 + 7) % 11) / 11f - 0.5f;
+            float h = bp * (0.62f + 0.18f * jitter);
+            float halfW = step * 0.6f;
+            float baseX = pkX + ox * h;
+            float baseY = pkY + oy * h;
+            shapeRenderer.setColor(front);
+            shapeRenderer.triangle(
+                    pkX, pkY,
+                    baseX - tx * halfW, baseY - ty * halfW,
+                    baseX + tx * halfW, baseY + ty * halfW);
+
+            // Shadow side
+            shapeRenderer.setColor(shade);
+            shapeRenderer.triangle(
+                    pkX, pkY,
+                    baseX - tx * halfW, baseY - ty * halfW,
+                    baseX, baseY);
+
+            // Snow cap
+            float capH = h * 0.35f;
+            float capBaseX = pkX + ox * capH;
+            float capBaseY = pkY + oy * capH;
+            float capHalfW = halfW * 0.42f;
+            shapeRenderer.setColor(snow);
+            shapeRenderer.triangle(
+                    pkX, pkY,
+                    capBaseX - tx * capHalfW, capBaseY - ty * capHalfW,
+                    capBaseX + tx * capHalfW, capBaseY + ty * capHalfW);
+        }
+    }
+
+    public void renderFlagIndicator() {
+        float flagX = BOARD_PIXEL_WIDTH / 2f;
+        float flagY = BOARD_PIXEL_HEIGHT - 5f;
+
+        float halfW = camera.viewportWidth / 2f;
+        float halfH = camera.viewportHeight / 2f;
+        float left = camera.position.x - halfW;
+        float right = camera.position.x + halfW;
+        float bottom = camera.position.y - halfH;
+        float top = camera.position.y + halfH;
+
+        float visPad = 16f;
+        if (flagX >= left + visPad && flagX <= right - visPad
+                && flagY >= bottom + visPad && flagY <= top - visPad) {
+            return;
+        }
+
+        float edgePad = 14f;
+        float l = left + edgePad;
+        float r = right - edgePad;
+        float b = bottom + edgePad;
+        float t = top - edgePad;
+
+        float cx = camera.position.x;
+        float cy = camera.position.y;
+        float dx = flagX - cx;
+        float dy = flagY - cy;
+
+        float scaleX = Float.POSITIVE_INFINITY;
+        float scaleY = Float.POSITIVE_INFINITY;
+        if (dx > 0.0001f) scaleX = (r - cx) / dx;
+        else if (dx < -0.0001f) scaleX = (l - cx) / dx;
+        if (dy > 0.0001f) scaleY = (t - cy) / dy;
+        else if (dy < -0.0001f) scaleY = (b - cy) / dy;
+        float hit = Math.min(scaleX, scaleY);
+        if (hit <= 0f || Float.isInfinite(hit)) return;
+
+        float ix = cx + dx * hit;
+        float iy = cy + dy * hit;
+        float len = (float) Math.sqrt(dx * dx + dy * dy);
+        if (len < 0.001f) return;
+        float ux = dx / len;
+        float uy = dy / len;
+        float perpX = -uy;
+        float perpY = ux;
+
+        float pulse = 1f + 0.08f * MathUtils.sin(animationTime * 4f);
+        float size = 7.5f * pulse;
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        shapeRenderer.setColor(0f, 0f, 0f, 0.35f);
+        shapeRenderer.circle(ix, iy, size * 1.25f);
+
+        // Arrow-shaped pointer
+        shapeRenderer.setColor(1f, 0.85f, 0.2f, 1f);
+        float tipX = ix + ux * size;
+        float tipY = iy + uy * size;
+        float tailX = ix - ux * size * 0.7f;
+        float tailY = iy - uy * size * 0.7f;
+        float wingX = ix + perpX * size * 0.65f;
+        float wingY = iy + perpY * size * 0.65f;
+        float wingX2 = ix - perpX * size * 0.65f;
+        float wingY2 = iy - perpY * size * 0.65f;
+        shapeRenderer.triangle(tipX, tipY, wingX, wingY, tailX, tailY);
+        shapeRenderer.triangle(tipX, tipY, wingX2, wingY2, tailX, tailY);
+
+        shapeRenderer.setColor(1f, 0.97f, 0.6f, 1f);
+        float innerSize = size * 0.55f;
+        float itipX = ix + ux * innerSize;
+        float itipY = iy + uy * innerSize;
+        float itailX = ix - ux * innerSize * 0.6f;
+        float itailY = iy - uy * innerSize * 0.6f;
+        float iwingX = ix + perpX * innerSize * 0.45f;
+        float iwingY = iy + perpY * innerSize * 0.45f;
+        float iwingX2 = ix - perpX * innerSize * 0.45f;
+        float iwingY2 = iy - perpY * innerSize * 0.45f;
+        shapeRenderer.triangle(itipX, itipY, iwingX, iwingY, itailX, itailY);
+        shapeRenderer.triangle(itipX, itipY, iwingX2, iwingY2, itailX, itailY);
+
         shapeRenderer.end();
 
-        // Frame the actual board so the player has a visible boundary when near the
-        // edge
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(0.35f, 0.5f, 0.75f, 0.8f);
-        shapeRenderer.rect(0, 0, BOARD_PIXEL_WIDTH, BOARD_PIXEL_HEIGHT);
-        shapeRenderer.end();
+        // Draw a tiny checker flag icon next to the arrow
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        worldFont.setColor(1f, 0.85f, 0.2f, 1f);
+        int distCells = (int) (len / CELL_SIZE);
+        worldFont.draw(batch, distCells + "m",
+                ix - ux * (size + 6f) - 6f,
+                iy - uy * (size + 6f) + 2f);
+        batch.end();
     }
 
     public void renderFinishFlag() {

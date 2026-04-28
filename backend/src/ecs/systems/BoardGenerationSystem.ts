@@ -7,8 +7,8 @@ import {
 } from "../components";
 
 export const BOARD_SIZE = 100;
-const OBSTACLE_COUNT = 500;
-const BOOST_COUNT = 200;
+const OBSTACLE_COUNT = 100;
+const BOOST_COUNT = 60;
 const DEFAULT_BOOST_AMOUNT = 10;
 
 /**

@@ -136,6 +136,7 @@ public class GameState extends BaseState {
         renderer.renderFinishFlag();
         renderer.renderObstacles(model.getObstacles());
         renderer.renderBoosts(model.getBoosts());
+        renderer.renderMountainBorder();
 
         java.util.List<GameRenderer.PlayerRenderData> playerRenderData = new java.util.ArrayList<>();
         java.util.List<GameModel.PlayerData> allPlayers = model.getPlayers();
@@ -157,6 +158,8 @@ public class GameState extends BaseState {
         renderer.renderPlayers(playerRenderData, model.getCurrentTurnPlayerId());
 
 
+
+        renderer.renderFlagIndicator();
 
         renderer.endRender();
 
