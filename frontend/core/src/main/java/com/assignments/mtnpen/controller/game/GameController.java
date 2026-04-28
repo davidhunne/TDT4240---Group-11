@@ -41,10 +41,10 @@ public class GameController {
         if (moveSubmitted)
             return;
 
-        model.submitMove(angle, velocity);
         int[] targetPos = model.getTargetPosition(angle, velocity);
-
+        model.submitMove(angle, velocity);
         moveSubmitted = true;
+
         gsm.getNetworkManager().submitMovePosition(
                 model.getGameId(),
                 model.getPlayerId(),
@@ -59,6 +59,10 @@ public class GameController {
                     @Override
                     public void onError(Throwable t) {
                         Gdx.app.log("GameController", "Move submission failed: " + t.getMessage());
+                        Gdx.app.postRunnable(() -> {
+                            moveSubmitted = false;
+                            model.clearMove();
+                        });
                     }
                 });
     }

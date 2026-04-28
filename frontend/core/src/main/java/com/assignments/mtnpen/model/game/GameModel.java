@@ -153,13 +153,17 @@ public class GameModel {
     }
     
     public int[] getTargetPosition(float angle, float velocity) {
-        int distance = Math.round(velocity * 10);
-        int x = Math.round(distance * (float)Math.cos(angle));
-        int y = Math.round(distance * (float)Math.sin(angle));
-        
+        PlayerData current = getCurrentPlayer();
+        int startX = current != null ? current.positionX : 0;
+        int startY = current != null ? current.positionY : 0;
+
+        int distance = Math.round(velocity * 0.4f);
+        int x = startX + Math.round(distance * (float) Math.cos(angle));
+        int y = startY + Math.round(distance * (float) Math.sin(angle));
+
         x = Math.max(0, Math.min(99, x));
         y = Math.max(0, Math.min(99, y));
-        
+
         return new int[]{x, y};
     }
 
