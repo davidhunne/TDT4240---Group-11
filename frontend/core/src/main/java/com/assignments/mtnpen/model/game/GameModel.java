@@ -46,7 +46,6 @@ public class GameModel {
         gameStatus = gameJson.getString("status", "in_progress");
         currentTurnIndex = gameJson.getInt("currentTurnIndex", 0);
         
-        // Parse players
         players.clear();
         playersByIdCache.clear();
         JsonValue playersArray = gameJson.get("players");
@@ -69,7 +68,6 @@ public class GameModel {
             }
         }
         
-        // Parse turn order
         turnOrder.clear();
         JsonValue turnArray = gameJson.get("turnOrder");
         if (turnArray != null) {
@@ -78,10 +76,7 @@ public class GameModel {
             }
         }
         
-        // Parse board state
         parseBoard(gameJson.get("boardState"));
-        
-        // Update phase based on game status and current player
         updatePhaseFromStatus();
     }
     
@@ -91,7 +86,6 @@ public class GameModel {
         obstacles.clear();
         boosts.clear();
         
-        // Parse obstacles
         JsonValue obstaclesArray = boardJson.get("obstacles");
         if (obstaclesArray != null) {
             for (JsonValue obs : obstaclesArray) {
@@ -102,7 +96,6 @@ public class GameModel {
             }
         }
         
-        // Parse boosts
         JsonValue boostsArray = boardJson.get("boosts");
         if (boostsArray != null) {
             for (JsonValue boost : boostsArray) {
@@ -119,15 +112,19 @@ public class GameModel {
         if ("finished".equals(gameStatus)) {
             currentPhase = GamePhase.FINISHED;
         } else if ("in_progress".equals(gameStatus)) {
-            // Determine phase based on turn progression
-            if (isCurrentPlayerTurn()) {
+            if (hasPendingMove) {
+                currentPhase = GamePhase.RESOLVING;
+            } else if (isCurrentPlayerTurn()) {
+                if (currentPhase != GamePhase.INPUT) {
+                    phaseTimer = 0f;
+                }
                 currentPhase = GamePhase.INPUT;
-                phaseTimer = 0f;
             } else {
                 currentPhase = GamePhase.OPPONENT_INPUT;
             }
         } else {
-            currentPhase = GamePhase.INPUT;
+            // Lobby / waiting state
+            currentPhase = GamePhase.COUNTDOWN;
         }
     }
     
@@ -155,19 +152,18 @@ public class GameModel {
         currentMoveVelocity = 0f;
     }
     
-    /**
-     * Convert angle and velocity to target board position.
-     * Assumes penguin starts at position (0, 0).
-     */
     public int[] getTargetPosition(float angle, float velocity) {
-        int distance = Math.round(velocity * 10); // Scale velocity to board distance
-        int x = Math.round(distance * (float)Math.cos(angle));
-        int y = Math.round(distance * (float)Math.sin(angle));
-        
-        // Clamp to board bounds (100x100)
+        PlayerData current = getCurrentPlayer();
+        int startX = current != null ? current.positionX : 0;
+        int startY = current != null ? current.positionY : 0;
+
+        int distance = Math.round(velocity * 0.4f);
+        int x = startX + Math.round(distance * (float) Math.cos(angle));
+        int y = startY + Math.round(distance * (float) Math.sin(angle));
+
         x = Math.max(0, Math.min(99, x));
         y = Math.max(0, Math.min(99, y));
-        
+
         return new int[]{x, y};
     }
 
@@ -227,6 +223,10 @@ public class GameModel {
         return getPlayer(playerId);
     }
     
+    public int getCurrentTurnIndex() {
+        return currentTurnIndex;
+    }
+
     public String getCurrentTurnPlayerId() {
         if (turnOrder.isEmpty() || currentTurnIndex >= turnOrder.size()) {
             return null;

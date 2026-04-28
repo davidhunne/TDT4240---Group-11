@@ -18,7 +18,11 @@ const DEFAULT_BOOST_AMOUNT = 10;
 export const BoardGenerationSystem = {
   run(world: GameWorld): void {
     const used = new Set<string>();
-    used.add("0,0");
+    for (let px = 10; px <= 90; px += 20) {
+      for (let py = 0; py <= 4; py++) {
+        used.add(`${px},${py}`);
+      }
+    }
 
     const place = (
       count: number,

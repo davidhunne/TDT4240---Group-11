@@ -59,37 +59,37 @@ public class InputController implements InputProcessor {
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
         if (pointer != 0 || !isDragging) return false;
-        
+
         dragCurrent.set(screenX, screenY);
-        
+
         float deltaX = dragCurrent.x - dragStart.x;
         float deltaY = dragCurrent.y - dragStart.y;
         float distance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        
-        float angle = (float) Math.atan2(-deltaY, -deltaX);
+
+        float launchAngle = (float) Math.atan2(deltaY, -deltaX);
         float velocity = Math.min(distance / MAX_DRAG_DISTANCE, 1f) * VELOCITY_SCALE;
-        
-        callback.onDragUpdate(screenX, screenY, angle, velocity);
+
+        callback.onDragUpdate(screenX, screenY, launchAngle, velocity);
         return true;
     }
-    
+
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         if (pointer != 0 || !isDragging) return false;
-        
+
         isDragging = false;
-        
+
         float deltaX = dragCurrent.x - dragStart.x;
         float deltaY = dragCurrent.y - dragStart.y;
         float distance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        
-        float angle = (float) Math.atan2(-deltaY, -deltaX);
+
+        float launchAngle = (float) Math.atan2(deltaY, -deltaX);
         float velocity = Math.min(distance / MAX_DRAG_DISTANCE, 1f) * VELOCITY_SCALE;
-        
+
         if (distance > 10) {
-            callback.onDragEnd(screenX, screenY, angle, velocity);
+            callback.onDragEnd(screenX, screenY, launchAngle, velocity);
         }
-        
+
         return true;
     }
     
