@@ -1,6 +1,6 @@
 import { db } from "../config/firebase";
 import { Game, GamePlayer, Move } from "../types";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { updatePlayerStats } from "./playerService";
 import {
@@ -56,7 +56,7 @@ export async function createGame(
   hostId: string,
   hostDisplayName: string,
 ): Promise<Game> {
-  const id = uuidv4();
+  const id = randomUUID();
   const now = Timestamp.now();
 
   const hostPlayer: GamePlayer = {
@@ -208,7 +208,7 @@ export async function submitMove(
   const world = World.getInstance();
   const ecs = world.getOrHydrate(game);
 
-  const moveId = uuidv4();
+  const moveId = randomUUID();
   const move: Move = {
     id: moveId,
     gameId,
