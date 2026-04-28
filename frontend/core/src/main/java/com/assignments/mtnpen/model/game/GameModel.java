@@ -1,4 +1,7 @@
 package com.assignments.mtnpen.model.game;
+import com.assignments.mtnpen.model.parameters.GameParameters;
+
+import com.badlogic.gdx.math.Vector2;
 
 public class GameModel {
     private String gameId;
@@ -7,15 +10,12 @@ public class GameModel {
     private boolean isPaused = false;
     private float gameTime = 0;
 
-    private float penguinPositionX = 0;
-    private float penguinPositionY = 0;
+    private float penguinPositionX = GameParameters.WORLD_WIDTH / 2; // Start in the middle of the world
+    private float penguinPositionY = GameParameters.WORLD_HEIGHT / 2;
 
 
     private float launchVelocityX = 0;
     private float launchVelocityY = 0;
-
-    private float penguinPositionX = 0;
-    private float penguinPositionY = 0;
 
 
 
@@ -66,7 +66,14 @@ public class GameModel {
     public float getPenguinPositionY() {
         return penguinPositionY;
     }
+    public Vector2 getPenguinPosition() {
+        return new Vector2(penguinPositionX, penguinPositionY);
+    }
 
+    public void setPenguinPosition(float x, float y) {
+        this.penguinPositionX = x;
+        this.penguinPositionY = y;
+    }
 
     public float getLaunchVelocityX() {
         return launchVelocityX;
@@ -79,12 +86,6 @@ public class GameModel {
         this.launchVelocityY = vy;
     }
 
-    public float getPenguinPositionX() {
-        return penguinPositionX;
-    }
-    public float getPenguinPositionY() {
-        return penguinPositionY;
-    }
 
 
 }

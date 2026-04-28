@@ -1,5 +1,7 @@
 package com.assignments.mtnpen.controller.input;
 
+import com.assignments.mtnpen.model.game.GameModel;
+
 import com.assignments.mtnpen.model.parameters.GameParameters;
 
 import com.badlogic.gdx.InputAdapter;
@@ -9,6 +11,8 @@ import com.badlogic.gdx.math.Vector2;
 
 import com.badlogic.gdx.utils.TimeUtils;
 
+import com.badlogic.gdx.graphics.OrthographicCamera;
+
 public class InputController extends InputAdapter {
 
   public enum InputState {
@@ -16,23 +20,24 @@ public class InputController extends InputAdapter {
   }
 
   private InputState state = InputState.IDLE;
+  private GameModel model;
 
 
-  private final Vector2 penguinPosition = new Vector2();
   private Vector2 touchPosition = new Vector2();
   private Vector2 relativeTouchPos = new Vector2();
   
   private long touchStartMillis;
   private final AimListener aimListener;
 
+  private final OrthographicCamera camera;
 
-  public InputController(AimListener aimListener) {
+
+  public InputController(GameModel model, AimListener aimListener, OrthographicCamera camera) {
     this.aimListener = aimListener;
+    this.camera = camera;
+    this.model = model;
   }
 
-  public void setPenguinPosition(float x, float y) {
-    penguinPosition.set(x, y);
-  }
 
 
   @Override
@@ -41,13 +46,13 @@ public class InputController extends InputAdapter {
 
     touchPosition.set(screenX, screenY);
 
-    float distance = penguinPosition.dst(screenX, screenY);
+    float distance = model.getPenguinPosition().dst(screenX, screenY);
     if (distance > GameParameters.MAX_LAUNCH_RADIUS) return false; // Only start touch if close enough to
 
     state = InputState.TOUCHING;
     touchStartMillis = TimeUtils.millis();
 
-    relativeTouchPos.set(touchPosition).sub(penguinPosition).limit(GameParameters.MAX_LAUNCH_RADIUS);
+    relativeTouchPos.set(touchPosition).sub(model.getPenguinPosition()).limit(GameParameters.MAX_LAUNCH_RADIUS);
 
     return true;
   }
@@ -64,7 +69,7 @@ public class InputController extends InputAdapter {
     }
     if (state == InputState.DRAGGING) {
       touchPosition.set(screenX, screenY);
-      relativeTouchPos.set(touchPosition).sub(penguinPosition).limit(GameParameters.MAX_LAUNCH_RADIUS);
+      relativeTouchPos.set(touchPosition).sub(model.getPenguinPosition()).limit(GameParameters.MAX_LAUNCH_RADIUS);
 
     }
 
@@ -93,6 +98,7 @@ public class InputController extends InputAdapter {
     if (state != InputState.LOCKED) return;
 
     state = InputState.IDLE;
+    relativeTouchPos.setZero();
     aimListener.onAimCancel();
   }
 

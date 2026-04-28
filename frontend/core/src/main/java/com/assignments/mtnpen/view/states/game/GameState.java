@@ -20,6 +20,9 @@ import com.badlogic.gdx.math.Vector2;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import com.badlogic.gdx.graphics.Texture;
+
+
 
 
 public class GameState extends BaseState {
@@ -30,7 +33,9 @@ public class GameState extends BaseState {
     private OrthographicCamera camera;
     private ShapeRenderer shapeRenderer;
 
-    private SpriteBatch sb;
+    private SpriteBatch batch;
+    private Texture penguinTexture;
+
 
 
 
@@ -40,15 +45,19 @@ public class GameState extends BaseState {
         super(gsm);
         this.model = new GameModel(gameId, playerId, playerName);
         this.controller = new GameController(model, gsm);
-        this.inputController = new InputController(controller);
+        this.camera = new OrthographicCamera();
+        this.inputController = new InputController(model, controller, camera);
     }
 
     @Override
     public void create() {
         super.create();
-        
-        camera = new OrthographicCamera();
+
+        camera.setToOrtho(false, GameParameters.WORLD_WIDTH, GameParameters.WORLD_HEIGHT);
+        batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
+
+        penguinTexture = GameAssetManager.loadPenguin1(); //TODO: Replace with actual asset
 
         camera.setToOrtho(false, GameParameters.WORLD_WIDTH, GameParameters.WORLD_HEIGHT);
     }
@@ -69,9 +78,7 @@ public class GameState extends BaseState {
 
         Vector2 screenPos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
 
-        inputController.setPenguinPosition(screenPos.x, screenPos.y);
 
-        
     }
 
     @Override
@@ -95,27 +102,76 @@ public class GameState extends BaseState {
         super.render(delta);
         // TODO: Render ECS entities
 
-        sb.begin();
-        sb.draw(GameAssetManager.loadPenguin1(), model.getPenguinPositionX() - 16, model.getPenguinPositionY() - 16, 32, 32);
-        sb.end();
+        Gdx.gl.glClearColor(0.5f, 0.8f, 1f, 1); // Light blue background
+        Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
 
         camera.update();
-        
-        renderTrajectory();
+
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        renderMap();
+        renderPenguin();
+        batch.end();
+
+        renderAimLayer();
     }
 
-    private void renderTrajectory() {
-        
-        shapeRenderer.setProjectionMatrix(camera.combined);
+    private void renderPenguin() {
+        batch.draw(penguinTexture, model.getPenguinPositionX() - 16, model.getPenguinPositionY() - 16, 32, 32);
+    }
+
+    private void renderMap() {
+    }
+
+    private void renderAimLayer() {
+        if(inputController.getState() != InputController.InputState.LOCKED) {
+            Vector2 penguinPos = new Vector2(model.getPenguinPositionX(), model.getPenguinPositionY());
+            Vector2 aimPos = inputController.getRelativeTouchPos().scl(-1); // Invert to get launch direction
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            renderDragLine(penguinPos, aimPos);
+            renderTrajectory(penguinPos, aimPos);
+   
+        }
+    }
+
+    private void renderDragLine(Vector2 penguinPos,Vector2 aimPos) {
+
+
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(1, 0, 0, 1); // Red color for trajectory
+        shapeRenderer.setColor(1f, 1f, 1f, 0.8f);
 
-        Vector2 penguinPos = new Vector2(model.getPenguinPositionX(), model.getPenguinPositionY());
-        Vector2 launchVector = new Vector2(inputController.getRelativeTouchPos()).scl(-1); // Invert to get launch direction
-        Vector2 currentPos = new Vector2(penguinPos);
-
-
+        shapeRenderer.line(penguinPos, penguinPos.cpy().sub(aimPos));
         shapeRenderer.end();
-        
+
+    }
+
+    
+
+    private void renderTrajectory(Vector2 penguinPos,Vector2 aimPos) {
+
+
+
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(1f, 0.9f, 0.2f, 1f); // yellow dots
+ 
+        for (int i = 1; i <= GameParameters.TRAJECTORY_STEPS; i++) {
+            float t = i * GameParameters.TRAJECTORY_STEP_TIME;
+            float dotX = penguinPos.x + aimPos.x * t;
+            float dotY = penguinPos.y + aimPos.y * t;
+ 
+            // Stop drawing if the dot exits the world
+            if (dotX < 0 || dotX > GameParameters.WORLD_WIDTH
+                    || dotY < 0 || dotY > GameParameters.WORLD_HEIGHT) break;
+ 
+            // Dots fade as they get further along the arc
+            float alpha = 1f - (float) i / GameParameters.TRAJECTORY_STEPS;
+            shapeRenderer.setColor(1f, 0.9f, 0.2f, alpha);
+            shapeRenderer.circle(dotX, dotY, 5f, 10);
+        }
+ 
+        shapeRenderer.end();
+
+
     }
 }
