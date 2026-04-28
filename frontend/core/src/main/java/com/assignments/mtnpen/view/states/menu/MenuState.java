@@ -35,6 +35,7 @@ public class MenuState extends BaseState {
     private TextButton joinTab;
     private TextButton primaryAction;
     private TextButton settingsButton;
+    private TextButton leaderboardButton;
     private TextButton exitButton;
     private Container<TextField> lobbyCodeWrap;
 
@@ -138,10 +139,12 @@ public class MenuState extends BaseState {
 
         // Footer row
         settingsButton = new TextButton("Settings", skin, "ghost");
+        leaderboardButton = new TextButton("Leaderboard", skin, "ghost");
         exitButton = new TextButton("Quit", skin, "ghost");
         Table footer = new Table();
         footer.defaults().height(40f).padLeft(6f).padRight(6f);
         footer.add(settingsButton).width(140f);
+        footer.add(leaderboardButton).width(160f);
         footer.add(exitButton).width(140f);
 
         // Compose root
@@ -199,6 +202,12 @@ public class MenuState extends BaseState {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 controller.onSettingsClicked();
+            }
+        });
+        leaderboardButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                gsm.set(new com.assignments.mtnpen.view.states.leaderboard.LeaderboardState(gsm));
             }
         });
         exitButton.addListener(new ClickListener() {
