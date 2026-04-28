@@ -1,6 +1,7 @@
 package com.assignments.mtnpen.view.assetmanager;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -12,11 +13,30 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
-public class GameAssetManager {
+public final class GameAssetManager {
+    private static final AssetManager manager = new AssetManager();
+    private static boolean loaded = false;
     private GameAssetManager() {
     }
 
-    public static Skin loadUiSkin() {
+    public static void loadAssets() {
+        // Preload assets if necessary
+        //manager.load(AssetPaths.UI_SKIN, Skin.class);
+        manager.load(AssetPaths.PENGUIN1, Texture.class);
+        for (String skin : AssetPaths.PLAYER_SKINS) {
+            manager.load(skin, Texture.class);
+        }
+        manager.finishLoading();
+
+        for (String skin : AssetPaths.PLAYER_SKINS) {
+            Texture t = manager.get(skin, Texture.class);
+            t.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        }
+
+        loaded = true;
+    }
+
+    public static Skin getUiSkin() {
         FileHandle skinFile = Gdx.files.internal(AssetPaths.UI_SKIN);
         if (skinFile.exists()) {
             return new Skin(skinFile);
@@ -24,8 +44,16 @@ public class GameAssetManager {
         return createDefaultUiSkin();
     }
 
-    public static Texture loadPenguin1() {
-        return new Texture(Gdx.files.internal(AssetPaths.PENGUIN1));
+    public static Texture getPenguin1() {
+        return manager.get(AssetPaths.PENGUIN1, Texture.class);
+    }
+
+    public static Texture getPlayerSkin(int index) {
+        if (AssetPaths.PLAYER_SKINS.length == 0) {
+            return getPenguin1();
+        }
+        int safeIndex = Math.floorMod(index, AssetPaths.PLAYER_SKINS.length);
+        return manager.get(AssetPaths.PLAYER_SKINS[safeIndex], Texture.class);
     }
 
     private static Skin createDefaultUiSkin() {

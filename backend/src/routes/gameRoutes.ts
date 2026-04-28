@@ -32,7 +32,11 @@ router.get("/lobbies", async (_req: Request, res: Response) => {
 
 // Create a new game
 router.post("/", async (req: Request, res: Response) => {
-  const { playerId, displayName } = parseOrThrow(createGameBody, req.body, "body");
+  const { playerId, displayName } = parseOrThrow(
+    createGameBody,
+    req.body,
+    "body",
+  );
   const game = await createGame(playerId, displayName);
   res.status(201).json(game);
 });
@@ -48,7 +52,11 @@ router.get("/:gameId", async (req: Request, res: Response) => {
 // Join a game
 router.post("/:gameId/join", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
-  const { playerId, displayName } = parseOrThrow(joinGameBody, req.body, "body");
+  const { playerId, displayName } = parseOrThrow(
+    joinGameBody,
+    req.body,
+    "body",
+  );
   const game = await joinGame(gameId, playerId, displayName);
   res.json(game);
 });
@@ -72,8 +80,16 @@ router.post("/:gameId/start", async (req: Request, res: Response) => {
 // Submit a move
 router.post("/:gameId/move", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
-  const { playerId, action, data } = parseOrThrow(submitMoveBody, req.body, "body");
+  const { playerId, action, data } = parseOrThrow(
+    submitMoveBody,
+    req.body,
+    "body",
+  );
   const result = await submitMove(gameId, playerId, action, data ?? {});
+  console.log(
+    `Move submitted: gameId=${gameId}, playerId=${playerId}, action=${action}, data=${JSON.stringify(data)}`,
+  );
+
   res.json(result);
 });
 
@@ -95,7 +111,14 @@ router.get("/:gameId/moves", async (req: Request, res: Response) => {
 // Update connection state
 router.post("/:gameId/connection", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
-  const { playerId, connected } = parseOrThrow(connectionBody, req.body, "body");
+  const { playerId, connected } = parseOrThrow(
+    connectionBody,
+    req.body,
+    "body",
+  );
+  console.log(
+    `Updating connection state for player ${playerId} in game ${gameId}: connected=${connected}`,
+  );
   await updateConnectionState(gameId, playerId, connected);
   res.json({ success: true });
 });

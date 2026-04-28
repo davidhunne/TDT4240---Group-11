@@ -26,8 +26,11 @@ const BOOST_COUNT = 200;
 function generateBoard(): Record<string, unknown> {
   const cells: Record<string, "obstacle" | "boost"> = {};
   const used = new Set<string>();
-  // Reserve the spawn cell so players never start on an obstacle/boost.
-  used.add("0,0");
+  for (let px = 10; px <= 90; px += 20) {
+    for (let py = 0; py <= 4; py++) {
+      used.add(`${px},${py}`);
+    }
+  }
 
   const placeRandom = (type: "obstacle" | "boost", count: number) => {
     let placed = 0;
@@ -62,7 +65,7 @@ export async function createGame(
   const hostPlayer: GamePlayer = {
     playerId: hostId,
     displayName: hostDisplayName,
-    position: { x: 0, y: 0 },
+    position: { x: 15, y: 2 },
     score: 0,
     connected: true,
   };
@@ -125,10 +128,11 @@ export async function joinGame(
   const alreadyJoined = game.players.some((p) => p.playerId === playerId);
   if (alreadyJoined) return game;
 
+  const spawnX = 15 + game.players.length * 20;
   const newPlayer: GamePlayer = {
     playerId,
     displayName,
-    position: { x: 0, y: 0 },
+    position: { x: Math.min(spawnX, BOARD_SIZE - 5), y: 2 },
     score: 0,
     connected: true,
   };
