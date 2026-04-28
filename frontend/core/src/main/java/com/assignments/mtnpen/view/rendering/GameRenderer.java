@@ -28,9 +28,8 @@ public class GameRenderer {
     private static final float BOARD_PIXEL_WIDTH = BOARD_WIDTH * CELL_SIZE;
     private static final float BOARD_PIXEL_HEIGHT = BOARD_HEIGHT * CELL_SIZE;
 
-    // Number of board cells visible across the narrower screen axis.
-    // Smaller -> more zoomed in -> bigger visuals.
-    private static final float VIEW_CELLS_NARROW = 22f;
+    // Number of board cells visible across the screen axis.
+    private static final float VIEW_CELLS_NARROW = 44f;
 
     private static final float PENGUIN_BODY = 9f;
     private static final float OBSTACLE_RADIUS = 5.5f;
@@ -84,7 +83,7 @@ public class GameRenderer {
         float halfW = camera.viewportWidth / 2f;
         float halfH = camera.viewportHeight / 2f;
 
-        // Smoothly interpolate the camera toward the follow target
+        // Interpolate the camera toward the follow target
         float lerp = Math.min(1f, Gdx.graphics.getDeltaTime() * 6f);
         cameraCenter.x += (followTarget.x - cameraCenter.x) * lerp;
         cameraCenter.y += (followTarget.y - cameraCenter.y) * lerp;
@@ -129,7 +128,7 @@ public class GameRenderer {
         shapeRenderer.rect(left, bottom, camera.viewportWidth, camera.viewportHeight,
                 bot1, bot1, top1, top1);
 
-        // Soft snow drifts at the bottom of the visible area
+        // Snow drifting
         shapeRenderer.setColor(1f, 1f, 1f, 0.55f);
         float driftHeight = camera.viewportHeight * 0.18f;
         for (int i = 0; i < 3; i++) {
@@ -140,7 +139,6 @@ public class GameRenderer {
 
         shapeRenderer.end();
 
-        // Subtle grid lines aligned to board cells, but only across the visible area
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(0.62f, 0.74f, 0.92f, 0.35f);
         float gridStep = CELL_SIZE * 5f;
@@ -154,7 +152,8 @@ public class GameRenderer {
         }
         shapeRenderer.end();
 
-        // Frame the actual board so the player has a visible boundary when near the edge
+        // Frame the actual board so the player has a visible boundary when near the
+        // edge
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(0.35f, 0.5f, 0.75f, 0.8f);
         shapeRenderer.rect(0, 0, BOARD_PIXEL_WIDTH, BOARD_PIXEL_HEIGHT);
@@ -201,18 +200,21 @@ public class GameRenderer {
     }
 
     public void renderObstacles(List<Map<String, Integer>> obstacles) {
-        if (obstacles == null || obstacles.isEmpty()) return;
+        if (obstacles == null || obstacles.isEmpty())
+            return;
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
         for (Map<String, Integer> obstacle : obstacles) {
             Integer x = obstacle.get("x");
             Integer y = obstacle.get("y");
-            if (x == null || y == null) continue;
+            if (x == null || y == null)
+                continue;
 
             float px = x * CELL_SIZE + CELL_SIZE / 2;
             float py = y * CELL_SIZE + CELL_SIZE / 2;
-            if (!isInView(px, py, OBSTACLE_RADIUS * 2f)) continue;
+            if (!isInView(px, py, OBSTACLE_RADIUS * 2f))
+                continue;
 
             boolean isWater = ((x * 7 + y * 13) % 3) == 0;
 
@@ -259,20 +261,23 @@ public class GameRenderer {
     }
 
     public void renderBoosts(List<Map<String, ?>> boosts) {
-        if (boosts == null || boosts.isEmpty()) return;
+        if (boosts == null || boosts.isEmpty())
+            return;
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
         for (Map<String, ?> boost : boosts) {
             Object xObj = boost.get("x");
             Object yObj = boost.get("y");
-            if (xObj == null || yObj == null) continue;
+            if (xObj == null || yObj == null)
+                continue;
 
             int x = ((Number) xObj).intValue();
             int y = ((Number) yObj).intValue();
             float px = x * CELL_SIZE + CELL_SIZE / 2;
             float py = y * CELL_SIZE + CELL_SIZE / 2;
-            if (!isInView(px, py, BOOST_SIZE * 2f)) continue;
+            if (!isInView(px, py, BOOST_SIZE * 2f))
+                continue;
 
             drawIcePatch(px, py);
         }
@@ -303,12 +308,14 @@ public class GameRenderer {
     }
 
     public void renderPlayers(List<PlayerRenderData> players, String currentPlayerId) {
-        if (players == null || players.isEmpty()) return;
+        if (players == null || players.isEmpty())
+            return;
 
         // Drop shadows under each penguin
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         for (PlayerRenderData player : players) {
-            if (!isInView(player.position.x, player.position.y, PENGUIN_BODY * 3f)) continue;
+            if (!isInView(player.position.x, player.position.y, PENGUIN_BODY * 3f))
+                continue;
             shapeRenderer.setColor(0f, 0f, 0f, 0.25f);
             shapeRenderer.ellipse(player.position.x - PENGUIN_BODY,
                     player.position.y - PENGUIN_BODY * 0.95f,
@@ -317,8 +324,10 @@ public class GameRenderer {
 
         // Highlight ring under the player whose turn it is
         for (PlayerRenderData player : players) {
-            if (currentPlayerId == null || !currentPlayerId.equals(player.playerId)) continue;
-            if (!isInView(player.position.x, player.position.y, PENGUIN_BODY * 3f)) continue;
+            if (currentPlayerId == null || !currentPlayerId.equals(player.playerId))
+                continue;
+            if (!isInView(player.position.x, player.position.y, PENGUIN_BODY * 3f))
+                continue;
             float pulse = 1f + 0.08f * MathUtils.sin(animationTime * 4f);
             shapeRenderer.setColor(1f, 0.85f, 0.2f, 0.55f);
             shapeRenderer.circle(player.position.x, player.position.y - PENGUIN_BODY * 0.6f,
@@ -333,10 +342,12 @@ public class GameRenderer {
         batch.begin();
         for (int i = 0; i < players.size(); i++) {
             PlayerRenderData player = players.get(i);
-            if (!isInView(player.position.x, player.position.y, PENGUIN_BODY * 3f)) continue;
+            if (!isInView(player.position.x, player.position.y, PENGUIN_BODY * 3f))
+                continue;
 
             Texture skin = GameAssetManager.getPlayerSkin(player.skinIndex >= 0 ? player.skinIndex : i);
-            if (skin == null) continue;
+            if (skin == null)
+                continue;
 
             float size = PENGUIN_BODY * 2.4f;
             batch.draw(skin,
@@ -354,8 +365,9 @@ public class GameRenderer {
     }
 
     public void renderDragPreview(boolean isDragging, Vector2 dragStartScreen, Vector2 dragCurrentScreen,
-                                   float angle, float velocity, float maxVelocity, GameModel model) {
-        if (!isDragging || model.getCurrentPlayer() == null) return;
+            float angle, float velocity, float maxVelocity, GameModel model) {
+        if (!isDragging || model.getCurrentPlayer() == null)
+            return;
 
         float startX = model.getCurrentPlayer().positionX * CELL_SIZE + CELL_SIZE / 2f;
         float startY = model.getCurrentPlayer().positionY * CELL_SIZE + CELL_SIZE / 2f;
@@ -371,22 +383,16 @@ public class GameRenderer {
         float g = Math.min((1f - power) * 2f, 1f);
         shapeRenderer.setColor(r, g, 0f, 0.7f);
 
-        float radius = 1.5f + power * 6f;
+        float radius = 4f + power * 22f;
         shapeRenderer.circle(startX, startY, radius);
 
         float dx = startX - currentWorld.x;
         float dy = startY - currentWorld.y;
         float len = (float) Math.sqrt(dx * dx + dy * dy);
         if (len > 1f) {
-            float maxArrowLen = PENGUIN_BODY * 4f;
-            if (len > maxArrowLen) {
-                dx = dx / len * maxArrowLen;
-                dy = dy / len * maxArrowLen;
-                len = maxArrowLen;
-            }
             float tipX = startX + dx;
             float tipY = startY + dy;
-            float lineWidth = 0.8f + power * 1.4f;
+            float lineWidth = 2f + power * 4f;
             float nx = -dy / len * lineWidth / 2f;
             float ny = dx / len * lineWidth / 2f;
             shapeRenderer.triangle(
@@ -398,7 +404,7 @@ public class GameRenderer {
                     tipX + nx, tipY + ny,
                     tipX, tipY);
 
-            float arrowSize = 1.8f + power * 2.5f;
+            float arrowSize = 5f + power * 7f;
             float adx = dx / len;
             float ady = dy / len;
             shapeRenderer.triangle(
@@ -466,7 +472,7 @@ public class GameRenderer {
         }
 
         public PlayerRenderData(String playerId, String displayName, int x, int y, int score, boolean connected,
-                                int skinIndex) {
+                int skinIndex) {
             this.playerId = playerId;
             this.displayName = displayName;
             this.position = new Vector2(x * CELL_SIZE + CELL_SIZE / 2f, y * CELL_SIZE + CELL_SIZE / 2f);
