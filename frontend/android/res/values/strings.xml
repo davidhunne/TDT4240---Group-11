@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">MountainPenguins</string>
+  <string name="app_name">MountainPenguin</string>
   <string name="api_base_url">https://tdt-4240.vercel.app/api</string>
 </resources>

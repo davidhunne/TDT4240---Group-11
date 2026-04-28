@@ -56,7 +56,7 @@ configure(subprojects - project(':android')) {
 
 subprojects {
   version = "$projectVersion"
-  ext.appName = 'MountainPenguins'
+  ext.appName = 'MountainPenguin'
   repositories {
     mavenCentral()
     // You may want to remove the following line if you have errors downloading dependencies.
@@ -66,4 +66,4 @@ subprojects {
   }
 }
 
-eclipse.project.name = 'MountainPenguins' + '-parent'
+eclipse.project.name = 'MountainPenguin' + '-parent'

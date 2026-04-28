@@ -1,9 +1,9 @@
-# MountainPenguins
+# MountainPenguin
 
 > **Important**
 > To the examiner: Paste the environment variables that was in the deliverable. If you do not need to test the backend locally, you can leave the frontend API URL unchanged and run the frontend alone, it will then use the deployed Vercel backend.
 
-MountainPenguins is split into two runnable parts:
+MountainPenguin is split into two runnable parts:
 
 - `backend/`: an Express + TypeScript API backed by Firebase/Firestore
 - `frontend/`: a libGDX game client with shared core code plus desktop (`lwjgl3`) and Android launchers
