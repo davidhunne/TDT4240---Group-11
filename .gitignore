@@ -29,6 +29,8 @@
 /frontend/server/build/
 /frontend/shared/build/
 
+/frontend/core/bin/
+
 
 ## Java:
 *.class
