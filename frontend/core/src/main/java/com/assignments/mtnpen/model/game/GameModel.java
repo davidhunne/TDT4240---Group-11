@@ -7,6 +7,9 @@ public class GameModel {
     private boolean isPaused = false;
     private float gameTime = 0;
 
+    private float penguinPositionX = 0;
+    private float penguinPositionY = 0;
+
 
     private float launchVelocityX = 0;
     private float launchVelocityY = 0;
@@ -51,6 +54,14 @@ public class GameModel {
             gameTime += delta;
         }
     }
+
+    public float getPenguinPositionX() {
+        return penguinPositionX;
+    }
+    public float getPenguinPositionY() {
+        return penguinPositionY;
+    }
+
 
     public float getLaunchVelocityX() {
         return launchVelocityX;
