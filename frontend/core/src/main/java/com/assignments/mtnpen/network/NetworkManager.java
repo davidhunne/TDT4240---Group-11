@@ -9,7 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 public class NetworkManager {
-    public static final String DEFAULT_BASE_URL = "http://localhost:3000/api";
+    public static final String DEFAULT_BASE_URL = "https://tdt-4240.vercel.app/api";
     private final String baseUrl;
     private final JsonReader jsonReader;
 
