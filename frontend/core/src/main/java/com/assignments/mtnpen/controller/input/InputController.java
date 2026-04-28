@@ -48,9 +48,12 @@ public class InputController implements InputProcessor {
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         if (pointer != 0) return false;
-        
+
         isDragging = true;
-        dragStart.set(model.getCurrentPlayer().positionX, model.getCurrentPlayer().positionY);
+        // Drag deltas must be pure screen-space; the previous version mixed cell
+        // indices with screen pixels which made the launch angle depend on the
+        // player's absolute board position (very visible in corners).
+        dragStart.set(screenX, screenY);
         dragCurrent.set(screenX, screenY);
         callback.onDragStart(screenX, screenY);
         return true;

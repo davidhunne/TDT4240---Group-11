@@ -34,9 +34,10 @@ public class GameRenderer {
     private static final float PENGUIN_BODY = 9f;
     private static final float OBSTACLE_RADIUS = 5.5f;
     private static final float BOOST_SIZE = 6.5f;
-    private static final float FLAG_WIDTH = 28f;
-    private static final float FLAG_HEIGHT = 18f;
-    private static final float POLE_HEIGHT = 42f;
+    private static final float FLAG_WIDTH = 52f;
+    private static final float FLAG_HEIGHT = 32f;
+    private static final float POLE_HEIGHT = 80f;
+    private static final float GOAL_RADIUS = 30f;
 
     // Width of the mountain border that surrounds the playable area.
     private static final float BORDER_THICKNESS = 60f;
@@ -359,35 +360,45 @@ public class GameRenderer {
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Pole shadow
-        shapeRenderer.setColor(0f, 0f, 0f, 0.18f);
-        shapeRenderer.ellipse(flagX - 6f, flagBaseY - 1.5f, 14f, 4f);
+        float pulse = 1f + 0.12f * MathUtils.sin(animationTime * 2.5f);
+        float goalR = GOAL_RADIUS * pulse;
 
-        // Pole
-        shapeRenderer.setColor(0.35f, 0.24f, 0.14f, 1f);
-        shapeRenderer.rect(flagX - 1.4f, flagBaseY - POLE_HEIGHT, 2.8f, POLE_HEIGHT);
+        shapeRenderer.setColor(1f, 0.85f, 0.25f, 0.18f);
+        shapeRenderer.circle(flagX, flagBaseY, goalR * 1.35f);
+        shapeRenderer.setColor(1f, 0.92f, 0.45f, 0.30f);
+        shapeRenderer.circle(flagX, flagBaseY, goalR);
+        shapeRenderer.setColor(1f, 1f, 0.7f, 0.42f);
+        shapeRenderer.circle(flagX, flagBaseY, goalR * 0.62f);
 
-        // Flag background
-        float fX = flagX + 1.4f;
-        float fY = flagBaseY - 6f;
+        shapeRenderer.setColor(0f, 0f, 0f, 0.22f);
+        shapeRenderer.ellipse(flagX - 11f, flagBaseY - 2.5f, 22f, 6f);
+
+        shapeRenderer.setColor(0.30f, 0.20f, 0.12f, 1f);
+        shapeRenderer.rect(flagX - 1.8f, flagBaseY - POLE_HEIGHT, 3.6f, POLE_HEIGHT);
+        shapeRenderer.setColor(0.50f, 0.35f, 0.20f, 1f);
+        shapeRenderer.rect(flagX - 0.4f, flagBaseY - POLE_HEIGHT, 1f, POLE_HEIGHT);
+
+        float fX = flagX + 1.8f;
+        float fY = flagBaseY - 8f;
+        float sway = MathUtils.sin(animationTime * 3f) * 1.2f;
         shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.rect(fX, fY - FLAG_HEIGHT, FLAG_WIDTH, FLAG_HEIGHT);
+        shapeRenderer.rect(fX, fY - FLAG_HEIGHT + sway, FLAG_WIDTH, FLAG_HEIGHT);
 
-        // Checkered pattern
         float sq = FLAG_HEIGHT / 4f;
         shapeRenderer.setColor(Color.BLACK);
         int cols = (int) (FLAG_WIDTH / sq);
         for (int row = 0; row < 4; row++) {
             for (int col = 0; col < cols; col++) {
                 if ((row + col) % 2 == 0) {
-                    shapeRenderer.rect(fX + col * sq, fY - FLAG_HEIGHT + row * sq, sq, sq);
+                    shapeRenderer.rect(fX + col * sq, fY - FLAG_HEIGHT + row * sq + sway, sq, sq);
                 }
             }
         }
 
-        // Pole cap
-        shapeRenderer.setColor(Color.GOLD);
-        shapeRenderer.circle(flagX, flagBaseY, 3.2f);
+        shapeRenderer.setColor(1f, 0.85f, 0.10f, 1f);
+        shapeRenderer.circle(flagX, flagBaseY - POLE_HEIGHT, 3.5f);
+        shapeRenderer.setColor(1f, 0.97f, 0.55f, 1f);
+        shapeRenderer.circle(flagX - 0.6f, flagBaseY - POLE_HEIGHT + 0.6f, 1.4f);
 
         shapeRenderer.end();
     }
@@ -609,8 +620,19 @@ public class GameRenderer {
         return x >= left && x <= right && y >= bottom && y <= top;
     }
 
+    public void renderFx(FxSystem fx) {
+        if (fx == null) return;
+        fx.renderParticles(shapeRenderer);
+        fx.renderFloaters(batch, camera);
+    }
+
     public void endRender() {
         batch.flush();
+    }
+
+    public Vector2 cellToWorld(int cellX, int cellY) {
+        return new Vector2(cellX * CELL_SIZE + CELL_SIZE / 2f,
+                cellY * CELL_SIZE + CELL_SIZE / 2f);
     }
 
     public void dispose() {

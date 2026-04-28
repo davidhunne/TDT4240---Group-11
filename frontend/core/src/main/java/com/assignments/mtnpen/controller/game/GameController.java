@@ -120,31 +120,52 @@ public class GameController{
         handleGameFinished();
     }
 
+    public void onLocalPlayerReachedFlag() {
+        handleGameFinishedWith(model.getPlayerId());
+    }
+
     private void resetSubmittedMove() {
         moveSubmitted = false;
         model.clearMove();
     }
 
     private void handleGameFinished() {
-        gsm.getNetworkManager().endGame(model.getGameId(), model.getPlayerId(), new NetworkManager.NetworkCallback() {
+        handleGameFinishedWith(null);
+    }
+
+    private boolean finishHandled = false;
+
+    private void handleGameFinishedWith(String winnerId) {
+        if (finishHandled) return;
+        finishHandled = true;
+        gsm.getNetworkManager().endGame(model.getGameId(), winnerId, new NetworkManager.NetworkCallback() {
             @Override
             public void onSuccess(String response) {
-                Gdx.app.postRunnable(() -> {
-                    GameModel.PlayerData current = model.getCurrentPlayer();
-                    int finalScore = current != null ? current.score : 0;
-                    gsm.set(new ResultsState(gsm, model.getPlayerName(), finalScore, model.getGameTime()));
-                });
+                Gdx.app.postRunnable(() -> goToResults(winnerId));
             }
 
             @Override
             public void onError(Throwable t) {
-                Gdx.app.postRunnable(() -> {
-                    GameModel.PlayerData current = model.getCurrentPlayer();
-                    int finalScore = current != null ? current.score : 0;
-                    gsm.set(new ResultsState(gsm, model.getPlayerName(), finalScore, model.getGameTime()));
-                });
+                Gdx.app.postRunnable(() -> goToResults(winnerId));
             }
         });
+    }
+
+    private void goToResults(String winnerId) {
+        java.util.List<ResultsState.PlayerResult> results = new java.util.ArrayList<>();
+        java.util.List<GameModel.PlayerData> players = model.getPlayers();
+        for (int i = 0; i < players.size(); i++) {
+            GameModel.PlayerData pd = players.get(i);
+            boolean won = winnerId != null && winnerId.equals(pd.playerId);
+            results.add(new ResultsState.PlayerResult(
+                    pd.playerId, pd.displayName, pd.score, i, won));
+        }
+        gsm.set(new ResultsState(
+                gsm,
+                model.getPlayerId(),
+                model.getPlayerName(),
+                results,
+                model.getGameTime()));
     }
 
     private static class NoopCallback implements NetworkManager.NetworkCallback {

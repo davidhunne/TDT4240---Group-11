@@ -6,6 +6,7 @@ import com.assignments.mtnpen.controller.input.InputController;
 import com.assignments.mtnpen.model.game.GameModel;
 import com.assignments.mtnpen.model.game.GamePhase;
 import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
+import com.assignments.mtnpen.view.rendering.FxSystem;
 import com.assignments.mtnpen.view.rendering.GameRenderer;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
@@ -26,7 +27,18 @@ public class GameState extends BaseState {
     private final GameController controller;
     private final InputController inputController;
     private final GameRenderer renderer;
+    private final FxSystem fx;
     private final GameUI ui;
+    private final java.util.Map<String, int[]> lastPlayerCells = new java.util.HashMap<>();
+    private final java.util.Map<String, Integer> lastPlayerScores = new java.util.HashMap<>();
+    private final java.util.Set<String> seenObstacleCells = new java.util.HashSet<>();
+    private final java.util.Set<String> lastBoostCells = new java.util.HashSet<>();
+    private boolean finishCelebrated = false;
+    private float finishDelayTimer = -1f;
+    private boolean awaitingMoveResolution = false;
+    private int pendingFromX, pendingFromY, pendingTargetX, pendingTargetY;
+    private static final int FLAG_CELL_X = 50;
+    private static final int FLAG_CELL_Y = 99;
     private InputMultiplexer inputMultiplexer;
     private Skin skin;
     private Table overlayTable;
@@ -49,6 +61,7 @@ public class GameState extends BaseState {
         this.controller = new GameController(model, gsm);
         this.inputController = new InputController(model, createInputCallback());
         this.renderer = new GameRenderer(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        this.fx = new FxSystem();
         this.ui = new GameUI();
 
     };
@@ -77,6 +90,16 @@ public class GameState extends BaseState {
 
         model.update(delta);
         controller.update(delta);
+        fx.update(delta);
+        emitMoveFeedback();
+
+        if (finishDelayTimer > 0f) {
+            finishDelayTimer -= delta;
+            if (finishDelayTimer <= 0f) {
+                finishDelayTimer = -1f;
+                controller.onLocalPlayerReachedFlag();
+            }
+        }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             handleExit();
@@ -111,6 +134,7 @@ public class GameState extends BaseState {
         controller.onGameLeft();
         Gdx.input.setInputProcessor(null);
         renderer.dispose();
+        fx.dispose();
         ui.dispose();
         if (skin != null) {
             skin.dispose();
@@ -157,7 +181,7 @@ public class GameState extends BaseState {
         }
         renderer.renderPlayers(playerRenderData, model.getCurrentTurnPlayerId());
 
-
+        renderer.renderFx(fx);
 
         renderer.renderFlagIndicator();
 
@@ -203,6 +227,72 @@ public class GameState extends BaseState {
         stage.addActor(overlayTable);
     }
 
+    private void emitMoveFeedback() {
+        java.util.Set<String> currentBoosts = new java.util.HashSet<>();
+        for (java.util.Map<String, ?> b : model.getBoosts()) {
+            Object xo = b.get("x");
+            Object yo = b.get("y");
+            if (xo == null || yo == null) continue;
+            currentBoosts.add(((Number) xo).intValue() + "," + ((Number) yo).intValue());
+        }
+
+        for (GameModel.PlayerData pd : model.getPlayers()) {
+            String key = pd.playerId;
+            int[] prev = lastPlayerCells.get(key);
+            int curX = pd.positionX;
+            int curY = pd.positionY;
+            Vector2 world = renderer.cellToWorld(curX, curY);
+
+            if (prev == null) {
+                lastPlayerCells.put(key, new int[]{curX, curY});
+                lastPlayerScores.put(key, pd.score);
+                continue;
+            }
+
+            boolean moved = prev[0] != curX || prev[1] != curY;
+            if (moved) {
+                String cellKey = curX + "," + curY;
+                Integer prevScore = lastPlayerScores.get(key);
+                int scoreDelta = prevScore == null ? 0 : pd.score - prevScore;
+
+                boolean boostConsumed = lastBoostCells.contains(cellKey)
+                        && !currentBoosts.contains(cellKey);
+
+                if (boostConsumed || scoreDelta > 0) {
+                    int amount = scoreDelta > 0 ? scoreDelta : 10;
+                    fx.spawnBoost(world.x, world.y, amount);
+                } else {
+                    fx.spawnLand(world.x, world.y);
+                }
+
+                boolean reachedFlagZone = Math.abs(curX - FLAG_CELL_X) <= 4
+                        && Math.abs(curY - FLAG_CELL_Y) <= 4;
+                if (reachedFlagZone && !finishCelebrated) {
+                    fx.spawnFinish(world.x, world.y);
+                    finishCelebrated = true;
+                    if (key.equals(model.getPlayerId())) {
+                        finishDelayTimer = 1.4f;
+                    }
+                }
+
+                lastPlayerCells.put(key, new int[]{curX, curY});
+            }
+            lastPlayerScores.put(key, pd.score);
+        }
+
+        if (awaitingMoveResolution && !model.hasMove()) {
+            GameModel.PlayerData me = model.getCurrentPlayer();
+            if (me != null && me.positionX == pendingFromX && me.positionY == pendingFromY) {
+                Vector2 hit = renderer.cellToWorld(pendingTargetX, pendingTargetY);
+                fx.spawnHit(hit.x, hit.y);
+            }
+            awaitingMoveResolution = false;
+        }
+
+        lastBoostCells.clear();
+        lastBoostCells.addAll(currentBoosts);
+    }
+
     private InputController.InputCallback createInputCallback() {
         return new InputController.InputCallback() {
             @Override
@@ -232,6 +322,15 @@ public class GameState extends BaseState {
                 if (model.isCurrentPlayerTurnForUI() && model.getCurrentPhase() == GamePhase.INPUT) {
                     Gdx.app.log("GameState",
                             String.format("Submitting move: angle=%.2f, velocity=%.2f", angle, velocity));
+                    GameModel.PlayerData me = model.getCurrentPlayer();
+                    if (me != null) {
+                        pendingFromX = me.positionX;
+                        pendingFromY = me.positionY;
+                        int[] target = model.getTargetPosition(angle, velocity);
+                        pendingTargetX = target[0];
+                        pendingTargetY = target[1];
+                        awaitingMoveResolution = true;
+                    }
                     controller.submitMove(angle, velocity);
                 } else {
                     String reason = !model.isCurrentPlayerTurnForUI() ? "not your turn" : "not input phase";
