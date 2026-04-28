@@ -3,7 +3,7 @@ package com.assignments.mtnpen.model.menu;
 public class MenuModel {
     private String playerName = "";
     private String lobbyCode = "";
-    private String statusMessage = "Welcome! Create a lobby or join one with a code";
+    private String statusMessage = "";
 
     public String getPlayerName() {
         return playerName;
