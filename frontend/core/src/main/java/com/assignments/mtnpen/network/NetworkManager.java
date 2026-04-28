@@ -9,7 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 public class NetworkManager {
-    public static final String DEFAULT_BASE_URL = "http://localhost:3000/api";
+    public static final String DEFAULT_BASE_URL = "https://tdt-4240.vercel.app/api";
     private final String baseUrl;
     private final JsonReader jsonReader;
 
@@ -70,10 +70,12 @@ public class NetworkManager {
         sendPlayerId(Net.HttpMethods.POST, "/games/" + path(gameId) + "/start", playerId, callback);
     }
 
-    public void submitMove(String gameId, String playerId, String action, String dataJson, final NetworkCallback callback) {
+    public void submitMove(String gameId, String playerId, String action, String dataJson,
+            final NetworkCallback callback) {
         String data = dataJson == null || dataJson.trim().isEmpty() ? "{}" : dataJson;
         sendJson(Net.HttpMethods.POST, "/games/" + path(gameId) + "/move",
-                "{\"playerId\":\"" + escape(playerId) + "\",\"action\":\"" + escape(action) + "\",\"data\":" + data + "}",
+                "{\"playerId\":\"" + escape(playerId) + "\",\"action\":\"" + escape(action) + "\",\"data\":" + data
+                        + "}",
                 callback);
     }
 
@@ -92,7 +94,8 @@ public class NetworkManager {
         sendJson(Net.HttpMethods.GET, "/games/" + path(gameId) + "/moves", null, callback);
     }
 
-    public void updateConnectionState(String gameId, String playerId, boolean connected, final NetworkCallback callback) {
+    public void updateConnectionState(String gameId, String playerId, boolean connected,
+            final NetworkCallback callback) {
         sendJson(Net.HttpMethods.POST, "/games/" + path(gameId) + "/connection",
                 "{\"playerId\":\"" + escape(playerId) + "\",\"connected\":" + connected + "}",
                 callback);
@@ -141,20 +144,24 @@ public class NetworkManager {
     }
 
     private String extractError(String body) {
-        if (body == null || body.trim().isEmpty()) return "Empty error response";
+        if (body == null || body.trim().isEmpty())
+            return "Empty error response";
         try {
             JsonValue parsed = jsonReader.parse(body);
             String message = parsed.getString("message", null);
-            if (message != null) return message;
+            if (message != null)
+                return message;
             String error = parsed.getString("error", null);
-            if (error != null) return error;
+            if (error != null)
+                return error;
         } catch (Exception ignored) {
         }
         return body;
     }
 
     private static String trimTrailingSlash(String value) {
-        if (value == null || value.trim().isEmpty()) return DEFAULT_BASE_URL;
+        if (value == null || value.trim().isEmpty())
+            return DEFAULT_BASE_URL;
         String trimmed = value.trim();
         while (trimmed.endsWith("/")) {
             trimmed = trimmed.substring(0, trimmed.length() - 1);
@@ -171,7 +178,8 @@ public class NetworkManager {
     }
 
     private static String escape(String value) {
-        if (value == null) return "";
+        if (value == null)
+            return "";
         return value
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
@@ -184,6 +192,7 @@ public class NetworkManager {
 
     public interface NetworkCallback {
         void onSuccess(String response);
+
         void onError(Throwable t);
     }
 
