@@ -199,15 +199,7 @@ public class GameRenderer {
         shapeRenderer.circle(px, py, s * 0.35f);
     }
 
-    public void renderPlayers(List<PlayerRenderData> players, String highlightedPlayerId) {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        for (PlayerRenderData player : players) {
-            float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
-            float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
-            boolean isCurrent = highlightedPlayerId != null && highlightedPlayerId.equals(player.playerId);
-            drawPenguin(px, py, player.connected, isCurrent);
-        }
-        shapeRenderer.end();
+
 
     public void renderPlayers(List<PlayerRenderData> players, String currentPlayerId) {
         if (GameAssetManager.getPenguin1() == null) return;
@@ -215,36 +207,25 @@ public class GameRenderer {
         batch.begin();
         
         for (PlayerRenderData player : players) {
-            if (!player.connected) {
-                batch.setColor(0.5f, 0.5f, 0.5f, 0.5f);
-            } else if (currentPlayerId.equals(player.playerId)) {
-                batch.setColor(1f, 0.2f, 0.2f, 1f);
-            } else {
-                batch.setColor(0.2f, 0.6f, 1f, 1f);
-            }
+
+            boolean isCurrent = currentPlayerId != null && currentPlayerId.equals(player.playerId);
+            worldFont.setColor(isCurrent ? Color.RED : Color.DARK_GRAY);
+            worldFont.draw(batch, player.displayName, player.position.x - 8, player.position.y + PENGUIN_BODY + 6);
             batch.draw(GameAssetManager.getPenguin1(), player.position.x - PENGUIN_BODY, player.position.y - PENGUIN_BODY,
                     PENGUIN_BODY * 2, PENGUIN_BODY * 2);
-            
-
 
 
         }
-        batch.setColor(Color.WHITE);
-            float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
-            float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
-            boolean isCurrent = highlightedPlayerId != null && highlightedPlayerId.equals(player.playerId);
-            worldFont.setColor(isCurrent ? Color.RED : Color.DARK_GRAY);
-            worldFont.draw(batch, player.displayName, px - 8, py + PENGUIN_BODY + 6);
-        }
+
         batch.end();
         
     }
     
-    public void renderDragPreview(boolean isDragging, Vector2 dragStart, Vector2 dragCurrent,
+    public void renderDragPreview(boolean isDragging, Vector2 dragStartScreen, Vector2 dragCurrentScreen,
                                    float angle, float velocity, float maxVelocity, GameModel model) {
         if (!isDragging) return;
 
-        Vector3 startWorld = new Vector3(dragStartScreen.x, dragStartScreen.y, 0);
+        Vector3 startWorld = new Vector3(model.getCurrentPlayer().positionX, model.getCurrentPlayer().positionY, 0);
         camera.unproject(startWorld);
         Vector3 currentWorld = new Vector3(dragCurrentScreen.x, dragCurrentScreen.y, 0);
         camera.unproject(currentWorld);

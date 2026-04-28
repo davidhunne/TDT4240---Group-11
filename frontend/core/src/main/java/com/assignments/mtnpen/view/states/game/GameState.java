@@ -56,7 +56,7 @@ public class GameState extends BaseState {
     @Override
     public void create() {
         super.create();
-        skin = GameAssetManager.loadUiSkin();
+        skin = GameAssetManager.getUiSkin();
         buildUi();
         inputMultiplexer = new InputMultiplexer();
         inputMultiplexer.addProcessor(stage);
