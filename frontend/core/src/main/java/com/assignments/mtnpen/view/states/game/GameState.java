@@ -21,6 +21,7 @@ public class GameState extends BaseState {
     private final InputController inputController;
     private final GameRenderer renderer;
     private final GameUI ui;
+    private InputMultiplexer inputMultiplexer;
 
     private float initialPollDelay = 1f;
     private boolean gameStateLoaded = false;
@@ -39,13 +40,14 @@ public class GameState extends BaseState {
         this.controller = new GameController(model, gsm);
         this.inputController = new InputController(createInputCallback());
         this.renderer = new GameRenderer(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        this.ui = new GameUI(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-    }
+        this.ui = new GameUI();
+
+    };
 
     @Override
     public void create() {
         super.create();
-        InputMultiplexer inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer = new InputMultiplexer();
         inputMultiplexer.addProcessor(inputController);
         inputMultiplexer.addProcessor(stage);
         Gdx.input.setInputProcessor(inputMultiplexer);
@@ -81,7 +83,12 @@ public class GameState extends BaseState {
     @Override
     public void enter() {
         controller.onGameEntered();
-        Gdx.input.setInputProcessor(inputController);
+        if (inputMultiplexer == null) {
+            inputMultiplexer = new InputMultiplexer();
+            inputMultiplexer.addProcessor(inputController);
+            inputMultiplexer.addProcessor(stage);
+        }
+        Gdx.input.setInputProcessor(inputMultiplexer);
     }
 
     @Override
@@ -100,6 +107,7 @@ public class GameState extends BaseState {
 
         update(delta);
 
+        // Render game board in world coordinates
         renderer.beginRender();
 
         renderer.renderBoard();
@@ -125,10 +133,14 @@ public class GameState extends BaseState {
 
         renderer.endRender();
 
+        // Update and draw stage (scene2d UI)
+        stage.act(delta);
+        stage.draw();
+
+        // Render HUD in screen coordinates
         GameModel.PlayerData currentPlayer = model.getCurrentPlayer();
         int score = currentPlayer != null ? currentPlayer.score : 0;
         ui.render(
-                stage.getBatch(),
                 model.getCurrentPhase(),
                 model.getPhaseTimer(),
                 model.getInputPhaseTimeout(),
@@ -142,8 +154,6 @@ public class GameState extends BaseState {
     public void resize(int width, int height) {
         super.resize(width, height);
         renderer.updateCamera(width, height);
-        ((GameUI) ui).dispose();
-        // UI would need to be recreated with new dimensions if needed
     }
 
     private InputController.InputCallback createInputCallback() {

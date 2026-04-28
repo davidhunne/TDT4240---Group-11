@@ -226,6 +226,10 @@ public class GameModel {
         return getPlayer(playerId);
     }
     
+    public int getCurrentTurnIndex() {
+        return currentTurnIndex;
+    }
+
     public String getCurrentTurnPlayerId() {
         if (turnOrder.isEmpty() || currentTurnIndex >= turnOrder.size()) {
             return null;

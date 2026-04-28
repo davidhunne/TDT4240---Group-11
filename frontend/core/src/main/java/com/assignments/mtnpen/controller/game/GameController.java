@@ -11,9 +11,10 @@ public class GameController {
     private final GameModel model;
     private final GameStateManager gsm;
     private boolean moveSubmitted = false;
+    private int lastTurnIndex = -1;
     private float pollTimer = 0f;
     private static final float POLL_INTERVAL = 0.5f;
-    
+
     public GameController(GameModel model, GameStateManager gsm) {
         this.model = model;
         this.gsm = gsm;
@@ -32,38 +33,39 @@ public class GameController {
     }
 
     public void onGameLeft() {
-        gsm.getNetworkManager().updateConnectionState(model.getGameId(), model.getPlayerId(), false, new NoopCallback());
+        gsm.getNetworkManager().updateConnectionState(model.getGameId(), model.getPlayerId(), false,
+                new NoopCallback());
     }
 
     public void submitMove(float angle, float velocity) {
-        if (moveSubmitted) return;
-        
+        if (moveSubmitted)
+            return;
+
         model.submitMove(angle, velocity);
         int[] targetPos = model.getTargetPosition(angle, velocity);
-        
+
         moveSubmitted = true;
         gsm.getNetworkManager().submitMovePosition(
-            model.getGameId(), 
-            model.getPlayerId(), 
-            targetPos[0], 
-            targetPos[1], 
-            new NetworkManager.NetworkCallback() {
-                @Override
-                public void onSuccess(String response) {
-                    Gdx.app.log("GameController", "Move submitted successfully");
-                }
+                model.getGameId(),
+                model.getPlayerId(),
+                targetPos[0],
+                targetPos[1],
+                new NetworkManager.NetworkCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Gdx.app.log("GameController", "Move submitted successfully");
+                    }
 
-                @Override
-                public void onError(Throwable t) {
-                    Gdx.app.log("GameController", "Move submission failed: " + t.getMessage());
-                }
-            }
-        );
+                    @Override
+                    public void onError(Throwable t) {
+                        Gdx.app.log("GameController", "Move submission failed: " + t.getMessage());
+                    }
+                });
     }
 
     public void update(float delta) {
         pollTimer += delta;
-        
+
         if (pollTimer >= POLL_INTERVAL) {
             pollTimer = 0f;
             pollGameState();
@@ -78,13 +80,16 @@ public class GameController {
                     com.badlogic.gdx.utils.JsonValue gameJson = gsm.getNetworkManager().parse(response);
                     Gdx.app.postRunnable(() -> {
                         String previousStatus = model.getGameStatus();
+                        int previousTurnIndex = lastTurnIndex;
                         model.updateFromServerState(gameJson);
-                        
-                        // Reset move submission flag on new turn
-                        if (model.isCurrentPlayerTurnForUI() && !moveSubmitted) {
+
+                        // Reset move submission flag when a new turn begins
+                        int currentTurnIndex = model.getCurrentTurnIndex();
+                        if (currentTurnIndex != previousTurnIndex) {
                             moveSubmitted = false;
+                            lastTurnIndex = currentTurnIndex;
                         }
-                        
+
                         // Transition to results if game finished
                         if ("finished".equals(model.getGameStatus()) && !previousStatus.equals("finished")) {
                             handleGameFinished();
@@ -105,7 +110,7 @@ public class GameController {
     public void onGameFinished() {
         handleGameFinished();
     }
-    
+
     private void handleGameFinished() {
         gsm.getNetworkManager().endGame(model.getGameId(), model.getPlayerId(), new NetworkManager.NetworkCallback() {
             @Override
