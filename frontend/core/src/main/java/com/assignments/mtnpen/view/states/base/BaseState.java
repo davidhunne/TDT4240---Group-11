@@ -2,6 +2,7 @@ package com.assignments.mtnpen.view.states.base;
 
 import com.assignments.mtnpen.view.states.State;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
+import com.assignments.mtnpen.view.ui.UiScale;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -20,7 +21,9 @@ public abstract class BaseState implements State {
 
     @Override
     public void create() {
-        stage = new Stage(new ScreenViewport());
+        ScreenViewport viewport = new ScreenViewport();
+        viewport.setUnitsPerPixel(UiScale.sceneUnitsPerPixel());
+        stage = new Stage(viewport);
     }
 
     @Override

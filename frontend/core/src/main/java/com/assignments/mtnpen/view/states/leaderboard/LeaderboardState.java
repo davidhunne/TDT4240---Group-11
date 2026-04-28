@@ -30,6 +30,7 @@ import java.util.List;
 public class LeaderboardState extends BaseState {
 
     private static final int LIMIT = 25;
+    private static final float CONTENT_SIDE_MARGIN = 40f;
 
     private Skin skin;
     private FrostBackdrop backdrop;
@@ -41,6 +42,8 @@ public class LeaderboardState extends BaseState {
 
     private final List<Entry> entries = new ArrayList<>();
     private boolean loading = false;
+    private float contentWidth;
+    private float listWidth;
 
     public LeaderboardState(GameStateManager gsm) {
         super(gsm);
@@ -72,6 +75,9 @@ public class LeaderboardState extends BaseState {
     }
 
     private void buildShell() {
+        contentWidth = Math.max(360f, Math.min(640f, stage.getViewport().getWorldWidth() - CONTENT_SIDE_MARGIN));
+        listWidth = Math.max(320f, contentWidth - 60f);
+
         Table root = new Table();
         root.setFillParent(true);
         root.center();
@@ -84,7 +90,7 @@ public class LeaderboardState extends BaseState {
         contentSlot.add(statusLabel).pad(40f);
 
         Container<Table> contentWrap = new Container<>(contentSlot);
-        contentWrap.width(640f).minHeight(360f);
+        contentWrap.width(contentWidth).minHeight(360f);
 
         refreshButton = new TextButton("Refresh", skin, "ghost");
         backButton = new TextButton("BACK", skin, "gold");
@@ -177,7 +183,7 @@ public class LeaderboardState extends BaseState {
         Label detail = new Label(message == null ? "Unknown error" : message, skin, "error");
         detail.setWrap(true);
         detail.setAlignment(Align.center);
-        errCard.add(detail).width(420f).row();
+        errCard.add(detail).width(Math.min(420f, contentWidth - 60f)).row();
         contentSlot.add(errCard);
     }
 
@@ -216,12 +222,12 @@ public class LeaderboardState extends BaseState {
         Table rowsTable = new Table();
         rowsTable.top();
         for (int i = 0; i < entries.size(); i++) {
-            rowsTable.add(buildRow(i + 1, entries.get(i))).fillX().width(560f).padBottom(6f).row();
+            rowsTable.add(buildRow(i + 1, entries.get(i))).fillX().width(listWidth - 20f).padBottom(6f).row();
         }
         ScrollPane scroll = new ScrollPane(rowsTable);
         scroll.setFadeScrollBars(false);
         scroll.setScrollingDisabled(true, false);
-        listCard.add(scroll).width(580f).height(280f).row();
+        listCard.add(scroll).width(listWidth).height(280f).row();
 
         column.add(listCard).row();
 

@@ -29,7 +29,8 @@ public class GameUI {
     private void updateCamera() {
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();
-        hudCamera.setToOrtho(false, w, h);
+        float uiScale = UiScale.uiScale();
+        hudCamera.setToOrtho(false, w / uiScale, h / uiScale);
         hudCamera.update();
     }
 
