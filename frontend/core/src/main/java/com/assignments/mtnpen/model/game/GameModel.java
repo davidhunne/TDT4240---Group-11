@@ -119,15 +119,20 @@ public class GameModel {
         if ("finished".equals(gameStatus)) {
             currentPhase = GamePhase.FINISHED;
         } else if ("in_progress".equals(gameStatus)) {
-            // Determine phase based on turn progression
-            if (isCurrentPlayerTurn()) {
+            if (hasPendingMove) {
+                currentPhase = GamePhase.RESOLVING;
+            } else if (isCurrentPlayerTurn()) {
+                // Only reset timer when switching INTO input phase
+                if (currentPhase != GamePhase.INPUT) {
+                    phaseTimer = 0f;
+                }
                 currentPhase = GamePhase.INPUT;
-                phaseTimer = 0f;
             } else {
                 currentPhase = GamePhase.OPPONENT_INPUT;
             }
         } else {
-            currentPhase = GamePhase.INPUT;
+            // Lobby / waiting state
+            currentPhase = GamePhase.COUNTDOWN;
         }
     }
     

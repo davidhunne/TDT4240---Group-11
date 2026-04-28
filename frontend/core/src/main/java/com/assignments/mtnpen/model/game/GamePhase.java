@@ -5,7 +5,7 @@ public enum GamePhase {
     OPPONENT_INPUT("Waiting for other players..."),
     LAUNCH("Launching!"),
     RESOLVING("Movement resolving..."),
-    COUNTDOWN("Round ending in..."),
+    COUNTDOWN("Waiting for game to start..."),
     FINISHED("Race finished!");
     
     private final String displayText;

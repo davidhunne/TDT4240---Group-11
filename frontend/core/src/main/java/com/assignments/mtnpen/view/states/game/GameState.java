@@ -147,7 +147,8 @@ public class GameState extends BaseState {
                 score,
                 model.getPlayerName(),
                 dragVelocity,
-                dragAngle);
+                dragAngle,
+                model.hasMove());
     }
 
     @Override

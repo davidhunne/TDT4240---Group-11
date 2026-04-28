@@ -105,7 +105,6 @@ router.post("/:gameId/end", async (req: Request, res: Response) => {
 router.get("/:gameId/moves", async (req: Request, res: Response) => {
   const gameId = req.params.gameId as string;
   const moves = await getGameMoves(gameId);
-  console.log(`Request body: ${JSON.stringify(req.body)}`);
   res.json(moves);
 });
 
@@ -120,7 +119,6 @@ router.post("/:gameId/connection", async (req: Request, res: Response) => {
   console.log(
     `Updating connection state for player ${playerId} in game ${gameId}: connected=${connected}`,
   );
-  console.log(`Request body: ${JSON.stringify(req.body)}`);
   await updateConnectionState(gameId, playerId, connected);
   res.json({ success: true });
 });

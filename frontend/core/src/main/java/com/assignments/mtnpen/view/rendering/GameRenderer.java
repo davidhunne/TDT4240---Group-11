@@ -1,6 +1,7 @@
 package com.assignments.mtnpen.view.rendering;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -21,17 +22,21 @@ public class GameRenderer {
     private static final float BOARD_PIXEL_WIDTH = BOARD_WIDTH * CELL_SIZE;
     private static final float BOARD_PIXEL_HEIGHT = BOARD_HEIGHT * CELL_SIZE;
 
-    private static final float PENGUIN_RADIUS = 2f;
+    private static final float PENGUIN_RADIUS = 8f;
+    private static final float PENGUIN_OUTLINE = 10f;
     private static final float OBSTACLE_SIZE = 2f;
     private static final float BOOST_RADIUS = 1.5f;
     private static final float GOAL_SIZE = 3f;
 
+    private final BitmapFont worldFont;
     private float animationTime = 0f;
 
     public GameRenderer(int screenWidth, int screenHeight) {
         this.batch = new SpriteBatch();
         this.shapeRenderer = new ShapeRenderer();
         this.camera = new OrthographicCamera(screenWidth, screenHeight);
+        this.worldFont = new BitmapFont();
+        this.worldFont.getData().setScale(0.15f);
         updateCamera(screenWidth, screenHeight);
     }
 
@@ -137,8 +142,19 @@ public class GameRenderer {
 
     public void renderPlayers(List<PlayerRenderData> players, String currentPlayerId) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-
         for (PlayerRenderData player : players) {
+            float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
+            float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
+
+            shapeRenderer.setColor(0.1f, 0.1f, 0.1f, 0.9f);
+            shapeRenderer.circle(px, py, PENGUIN_OUTLINE);
+        }
+
+        // Draw filled player circles
+        for (PlayerRenderData player : players) {
+            float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
+            float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
+
             if (!player.connected) {
                 shapeRenderer.setColor(0.5f, 0.5f, 0.5f, 0.5f);
             } else if (currentPlayerId.equals(player.playerId)) {
@@ -146,13 +162,21 @@ public class GameRenderer {
             } else {
                 shapeRenderer.setColor(0.2f, 0.6f, 1f, 1f);
             }
-
-            float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
-            float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
             shapeRenderer.circle(px, py, PENGUIN_RADIUS);
         }
-
         shapeRenderer.end();
+
+        // Draw player name labels
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        for (PlayerRenderData player : players) {
+            float px = player.position.x * CELL_SIZE + CELL_SIZE / 2;
+            float py = player.position.y * CELL_SIZE + CELL_SIZE / 2;
+
+            worldFont.setColor(Color.WHITE);
+            worldFont.draw(batch, player.displayName, px - 10, py + PENGUIN_OUTLINE + 5);
+        }
+        batch.end();
     }
 
     public void renderDragPreview(boolean isDragging, Vector2 dragStartScreen, Vector2 dragCurrentScreen,
@@ -166,13 +190,46 @@ public class GameRenderer {
         Vector3 currentWorld = new Vector3(dragCurrentScreen.x, dragCurrentScreen.y, 0);
         camera.unproject(currentWorld);
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(1f, 0.5f, 0.5f, 0.8f);
+        float power = Math.min(velocity / maxVelocity, 1f);
 
-        shapeRenderer.line(startWorld.x, startWorld.y, currentWorld.x, currentWorld.y);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        float radius = (velocity / maxVelocity) * 30f;
+        float r = Math.min(power * 2f, 1f);
+        float g = Math.min((1f - power) * 2f, 1f);
+        shapeRenderer.setColor(r, g, 0f, 0.7f);
+
+        // Power circle at drag origin
+        float radius = 3f + power * 20f;
         shapeRenderer.circle(startWorld.x, startWorld.y, radius);
+
+        float dx = currentWorld.x - startWorld.x;
+        float dy = currentWorld.y - startWorld.y;
+        float len = (float) Math.sqrt(dx * dx + dy * dy);
+        if (len > 1f) {
+            float lineWidth = 1.5f + power * 3f;
+            float nx = -dy / len * lineWidth / 2f;
+            float ny = dx / len * lineWidth / 2f;
+            shapeRenderer.triangle(
+                    startWorld.x + nx, startWorld.y + ny,
+                    startWorld.x - nx, startWorld.y - ny,
+                    currentWorld.x, currentWorld.y);
+            shapeRenderer.triangle(
+                    startWorld.x - nx, startWorld.y - ny,
+                    currentWorld.x + nx, currentWorld.y + ny,
+                    currentWorld.x, currentWorld.y);
+
+            // Arrowhead
+            float arrowSize = 4f + power * 6f;
+            float adx = dx / len;
+            float ady = dy / len;
+            shapeRenderer.triangle(
+                    currentWorld.x + adx * arrowSize,
+                    currentWorld.y + ady * arrowSize,
+                    currentWorld.x - adx * arrowSize * 0.3f + ny,
+                    currentWorld.y - ady * arrowSize * 0.3f - nx,
+                    currentWorld.x - adx * arrowSize * 0.3f - ny,
+                    currentWorld.y - ady * arrowSize * 0.3f + nx);
+        }
 
         shapeRenderer.end();
     }
@@ -191,6 +248,7 @@ public class GameRenderer {
     public void dispose() {
         batch.dispose();
         shapeRenderer.dispose();
+        worldFont.dispose();
     }
 
     public OrthographicCamera getCamera() {
