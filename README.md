@@ -5,6 +5,9 @@ Mountain Penguin is a multiplayer game with:
 - a **Node.js/TypeScript backend** (Express + Firestore via Firebase Admin)
 - a **Java/libGDX frontend** (core game logic + LWJGL3 desktop launcher + Android launcher)
 
+> **Important reminder**
+> To the examiner: paste the environment variables included in the deliverable. If you do not need to test the backend locally, you can leave the frontend API URL unchanged and run the frontend alone against the deployed backend. The game requires 2+ players.
+
 ## User Manual
 
 ### 3.1 Device Requirements
@@ -76,9 +79,29 @@ The goal is to outplay opponents across rounds and reach the end of the map firs
 
 ## Prerequisites
 
-- Node.js + npm (for `backend/`)
-- Java JDK (17 recommended for local tooling; frontend compiles for Java 8 target)
-- Android SDK only if building/running `frontend/android/`
+### Required for the backend
+
+- Node.js (current LTS recommended)
+- Firebase Admin credentials for the Firestore project used by the backend
+
+Create `backend/.env` with:
+
+```env
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=your-service-account-email
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+```
+
+### Required for the frontend
+
+- JDK 17 for Gradle and Android builds
+- Gradle wrapper (already included; no separate Gradle install required)
+- Android Studio + Android SDK if you want to run the Android client
+- `ANDROID_SDK_ROOT` set, or `frontend/local.properties` containing:
+
+```properties
+sdk.dir=/absolute/path/to/your/Android/Sdk
+```
 
 ## Architecture overview
 
@@ -109,6 +132,80 @@ cd frontend
 ```
 
 The backend defaults to `http://localhost:3000`, and the desktop client defaults to `http://localhost:3000/api`.
+
+## Running Locally
+
+### 1. Install dependencies
+
+Backend:
+
+```powershell
+cd backend
+npm install
+```
+
+Frontend:
+
+```powershell
+cd frontend
+.\gradlew.bat build
+```
+
+### 2. Confirm frontend API targets
+
+- Desktop default API: `http://localhost:3000/api` (`NetworkManager.DEFAULT_BASE_URL`)
+- Android API string: `frontend/android/res/values/strings.xml` (`api_base_url`)
+
+For Android emulator local backend, use:
+
+```text
+http://10.0.2.2:3000/api
+```
+
+Production backend URL:
+
+```text
+https://tdt-4240.vercel.app
+```
+
+### 3. Start backend
+
+Development mode:
+
+```powershell
+cd backend
+npm run dev
+```
+
+Compiled run:
+
+```powershell
+cd backend
+npm run build
+npm start
+```
+
+Health check:
+
+- `http://localhost:3000/health`
+
+### 4. Start frontend
+
+Desktop client:
+
+```powershell
+cd frontend
+.\gradlew.bat lwjgl3:run
+```
+
+Android client:
+
+```powershell
+cd frontend
+.\gradlew.bat android:assembleDebug
+.\gradlew.bat android:installDebug
+.\gradlew.bat android:run
+```
 
 ## Backend
 
