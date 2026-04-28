@@ -1,8 +1,29 @@
 package com.assignments.mtnpen.model.game;
 
 public class GameModel {
+    private String gameId;
+    private String playerId;
+    private String playerName;
     private boolean isPaused = false;
     private float gameTime = 0;
+
+    public GameModel(String gameId, String playerId, String playerName) {
+        this.gameId = gameId;
+        this.playerId = playerId;
+        this.playerName = playerName;
+    }
+
+    public String getGameId() {
+        return gameId;
+    }
+
+    public String getPlayerId() {
+        return playerId;
+    }
+
+    public String getPlayerName() {
+        return playerName;
+    }
 
     public boolean isPaused() {
         return isPaused;

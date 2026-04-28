@@ -30,16 +30,13 @@ public class LobbyState extends BaseState {
     private TextButton readyButton;
     private TextButton startGameButton;
     private TextButton leaveLobbyButton;
+    private float pollTimer;
 
     public LobbyState(GameStateManager gsm, String playerName, String lobbyCode, boolean isHost) {
         super(gsm);
-        this.model = new LobbyModel(playerName, lobbyCode, isHost);
+        this.model = new LobbyModel(playerName, gsm.getPlayerId(), lobbyCode, isHost);
         this.controller = new LobbyController(model, gsm);
-
-        // Mocking some data for the model
         model.getPlayers().add(playerName + (isHost ? " (Host)" : ""));
-        model.getPlayers().add("Player 2");
-        model.getPlayers().add("Player 3");
     }
 
     @Override
@@ -70,6 +67,17 @@ public class LobbyState extends BaseState {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             controller.onLeaveLobbyClicked();
         }
+        pollTimer += delta;
+        if (pollTimer >= 1f) {
+            pollTimer = 0f;
+            controller.pollGame(new Runnable() {
+                @Override
+                public void run() {
+                    refreshPlayerList();
+                    updateStatusLabel();
+                }
+            });
+        }
     }
 
     @Override
@@ -86,7 +94,7 @@ public class LobbyState extends BaseState {
         playerTable = new Table();
 
         lobbyCodeLabel = new Label("Lobby Code: " + model.getLobbyCode(), skin);
-        hostLabel = new Label("Host: " + (model.isHost() ? model.getPlayerName() : "Another Player"), skin);
+        hostLabel = new Label("Host: " + (model.getHostName().isEmpty() ? "Waiting..." : model.getHostName()), skin);
         statusLabel = new Label("", skin);
 
         readyButton = new TextButton("Ready", skin);
@@ -139,6 +147,7 @@ public class LobbyState extends BaseState {
 
     private void refreshPlayerList() {
         playerTable.clear();
+        hostLabel.setText("Host: " + (model.getHostName().isEmpty() ? "Waiting..." : model.getHostName()));
         for (String player : model.getPlayers()) {
             playerTable.add(new Label(player, skin)).row();
         }
