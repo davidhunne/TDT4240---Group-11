@@ -212,8 +212,8 @@ public class GameRenderer {
             } else {
                 batch.setColor(0.2f, 0.6f, 1f, 1f);
             }
-            batch.draw(GameAssetManager.getPenguin1(), player.position.x - PENGUIN_RADIUS, player.position.y - PENGUIN_RADIUS,
-                    PENGUIN_RADIUS * 2, PENGUIN_RADIUS * 2);
+            batch.draw(GameAssetManager.getPenguin1(), player.position.x - PENGUIN_BODY, player.position.y - PENGUIN_BODY,
+                    PENGUIN_BODY * 2, PENGUIN_BODY * 2);
             
 
 
