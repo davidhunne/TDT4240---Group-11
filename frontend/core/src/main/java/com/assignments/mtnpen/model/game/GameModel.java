@@ -7,10 +7,10 @@ public class GameModel {
     private boolean isPaused = false;
     private float gameTime = 0;
 
-<<<<<<< HEAD
+
     private float launchVelocityX = 0;
     private float launchVelocityY = 0;
-=======
+
     public GameModel(String gameId, String playerId, String playerName) {
         this.gameId = gameId;
         this.playerId = playerId;
@@ -28,7 +28,7 @@ public class GameModel {
     public String getPlayerName() {
         return playerName;
     }
->>>>>>> main
+
 
     public boolean isPaused() {
         return isPaused;

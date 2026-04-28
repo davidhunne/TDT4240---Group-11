@@ -41,7 +41,7 @@ public class GameState extends BaseState {
     @Override
     public void create() {
         super.create();
-        
+
         camera = new OrthographicCamera();
         shapeRenderer = new ShapeRenderer();
 
@@ -62,35 +62,34 @@ public class GameState extends BaseState {
             controller.onGameFinished();
         }
 
-        Vector2 screenPos = worldToScreen(model.getPenguinPositionX(), model.getPenguinPositionY());
+        Vector2 screenPos = (model.getPenguinPositionX(), model.getPenguinPositionY());
 
         inputController.setPenguinPosition(screenPos.x, screenPos.y);
 
-        
+
     }
 
     @Override
     public void enter() {
-<<<<<<< HEAD
         // TODO: Initialize ECS, Load map, etc.
         InputMultiplexer multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(inputController);
         multiplexer.addProcessor(stage); // For handling back key, etc.
         Gdx.input.setInputProcessor(multiplexer);
-=======
+
         controller.onGameEntered();
->>>>>>> main
+
     }
 
     @Override
     public void leave() {
-<<<<<<< HEAD
+
         // TODO: Dispose assets
         shapeRenderer.dispose();
         super.leave();
-=======
+
         controller.onGameLeft();
->>>>>>> main
+
     }
 
     @Override
@@ -99,12 +98,12 @@ public class GameState extends BaseState {
         // TODO: Render ECS entities
 
         camera.update();
-        
+
         renderTrajectory();
     }
 
     private void renderTrajectory() {
-        
+
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(1, 0, 0, 1); // Red color for trajectory
@@ -115,6 +114,6 @@ public class GameState extends BaseState {
 
 
         shapeRenderer.end();
-        
+
     }
 }
