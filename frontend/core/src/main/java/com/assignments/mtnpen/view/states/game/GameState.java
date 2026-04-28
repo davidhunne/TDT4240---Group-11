@@ -1,8 +1,6 @@
 package com.assignments.mtnpen.view.states.game;
 
 import com.badlogic.gdx.InputMultiplexer;
-
-
 import com.assignments.mtnpen.controller.game.GameController;
 import com.assignments.mtnpen.controller.input.InputController;
 import com.assignments.mtnpen.model.game.GameModel;
@@ -23,12 +21,12 @@ public class GameState extends BaseState {
     private final InputController inputController;
     private final GameRenderer renderer;
     private final GameUI ui;
-    
+
     private float initialPollDelay = 1f;
     private boolean gameStateLoaded = false;
     private float autoFallbackTimer = 0f;
     private static final float AUTO_FALLBACK_TIMEOUT = 5f;
-    
+
     private boolean showDragPreview = false;
     private Vector2 dragScreenStart = new Vector2();
     private Vector2 dragScreenCurrent = new Vector2();
@@ -63,7 +61,7 @@ public class GameState extends BaseState {
             }
             return;
         }
-        
+
         model.update(delta);
         controller.update(delta);
 
@@ -111,24 +109,22 @@ public class GameState extends BaseState {
         renderer.renderBoard();
         renderer.renderObstacles(model.getObstacles());
         renderer.renderBoosts(model.getBoosts());
-        
+
         java.util.List<GameRenderer.PlayerRenderData> playerRenderData = new java.util.ArrayList<>();
         for (GameModel.PlayerData pd : model.getPlayers()) {
             playerRenderData.add(new GameRenderer.PlayerRenderData(
-                pd.playerId, pd.displayName, pd.positionX, pd.positionY, pd.score, pd.connected
-            ));
+                    pd.playerId, pd.displayName, pd.positionX, pd.positionY, pd.score, pd.connected));
         }
         renderer.renderPlayers(playerRenderData, model.getPlayerId());
 
         if (showDragPreview) {
             renderer.renderDragPreview(
-                inputController.isDragging(),
-                dragScreenStart,
-                dragScreenCurrent,
-                dragAngle,
-                dragVelocity,
-                50f
-            );
+                    inputController.isDragging(),
+                    dragScreenStart,
+                    dragScreenCurrent,
+                    dragAngle,
+                    dragVelocity,
+                    50f);
         }
 
         renderer.endRender();
@@ -136,15 +132,14 @@ public class GameState extends BaseState {
         GameModel.PlayerData currentPlayer = model.getCurrentPlayer();
         int score = currentPlayer != null ? currentPlayer.score : 0;
         ui.render(
-            stage.getBatch(),
-            model.getCurrentPhase(),
-            model.getPhaseTimer(),
-            model.getInputPhaseTimeout(),
-            score,
-            model.getPlayerName(),
-            dragVelocity,
-            dragAngle
-        );
+                stage.getBatch(),
+                model.getCurrentPhase(),
+                model.getPhaseTimer(),
+                model.getInputPhaseTimeout(),
+                score,
+                model.getPlayerName(),
+                dragVelocity,
+                dragAngle);
     }
 
     @Override
@@ -182,7 +177,8 @@ public class GameState extends BaseState {
                 dragScreenCurrent.setZero();
 
                 if (model.isCurrentPlayerTurnForUI() && model.getCurrentPhase() == GamePhase.INPUT) {
-                    Gdx.app.log("GameState", String.format("Submitting move: angle=%.2f, velocity=%.2f", angle, velocity));
+                    Gdx.app.log("GameState",
+                            String.format("Submitting move: angle=%.2f, velocity=%.2f", angle, velocity));
                     controller.submitMove(angle, velocity);
                 } else {
                     String reason = !model.isCurrentPlayerTurnForUI() ? "not your turn" : "not input phase";
