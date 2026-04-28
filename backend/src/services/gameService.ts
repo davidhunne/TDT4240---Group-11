@@ -181,8 +181,8 @@ export async function startGame(gameId: string, hostId: string): Promise<Game> {
     throw new ForbiddenError("Only the host can start the game");
   if (game.status !== "lobby")
     throw new ConflictError("Game is not in lobby state");
-  if (game.players.length < 2)
-    throw new ValidationError("Need at least 2 players to start");
+  if (game.players.length < 1)
+    throw new ValidationError("Need at least 1 player to start");
 
   game.status = "in_progress";
   game.currentTurnIndex = 0;
@@ -226,7 +226,9 @@ export async function submitMove(
     if (typeof pos.x === "number" && typeof pos.y === "number") {
       const result = MovementSystem.move(ecs, playerId, { x: pos.x, y: pos.y });
       if (!result.success) {
-        throw new ValidationError(`Invalid move: ${result.reason ?? "unknown"}`);
+        throw new ValidationError(
+          `Invalid move: ${result.reason ?? "unknown"}`,
+        );
       }
       const collision = CollisionSystem.run(ecs, playerId);
       move.data = {
@@ -298,7 +300,8 @@ export async function updateConnectionState(
   const game = await getGameOrThrow(gameId);
 
   const player = game.players.find((p) => p.playerId === playerId);
-  if (!player) throw new NotFoundError(`Player ${playerId} not in game ${gameId}`);
+  if (!player)
+    throw new NotFoundError(`Player ${playerId} not in game ${gameId}`);
 
   player.connected = connected;
   game.updatedAt = Timestamp.now();

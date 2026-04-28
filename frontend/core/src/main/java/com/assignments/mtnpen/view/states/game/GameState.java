@@ -1,78 +1,79 @@
+import com.badlogic.gdx.InputMultiplexer;
 package com.assignments.mtnpen.view.states.game;
 
 import com.assignments.mtnpen.controller.game.GameController;
+import com.assignments.mtnpen.controller.input.InputController;
 import com.assignments.mtnpen.model.game.GameModel;
-import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
+import com.assignments.mtnpen.model.game.GamePhase;
+import com.assignments.mtnpen.view.rendering.GameRenderer;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
+import com.assignments.mtnpen.view.states.menu.MenuState;
+import com.assignments.mtnpen.view.ui.GameUI;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-
-import com.assignments.mtnpen.model.parameters.GameParameters;
-import com.assignments.mtnpen.controller.input.InputController;
-
-import com.badlogic.gdx.InputMultiplexer;
-
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector2;
-
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
-import com.badlogic.gdx.graphics.Texture;
-
-
-
 
 public class GameState extends BaseState {
     private final GameModel model;
     private final GameController controller;
     private final InputController inputController;
-
-    private OrthographicCamera camera;
-    private ShapeRenderer shapeRenderer;
-
-    private SpriteBatch batch;
-    private Texture penguinTexture;
-
-
-
-
-
+    private final GameRenderer renderer;
+    private final GameUI ui;
+    
+    private float initialPollDelay = 1f;
+    private boolean gameStateLoaded = false;
+    private float autoFallbackTimer = 0f;
+    private static final float AUTO_FALLBACK_TIMEOUT = 5f;
+    
+    private boolean showDragPreview = false;
+    private Vector2 dragScreenStart = new Vector2();
+    private Vector2 dragScreenCurrent = new Vector2();
+    private float dragAngle = 0f;
+    private float dragVelocity = 0f;
 
     public GameState(GameStateManager gsm, String gameId, String playerId, String playerName) {
         super(gsm);
         this.model = new GameModel(gameId, playerId, playerName);
         this.controller = new GameController(model, gsm);
-        this.camera = new OrthographicCamera();
-        this.inputController = new InputController(model, controller, camera);
+        this.inputController = new InputController(createInputCallback());
+        this.renderer = new GameRenderer(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        this.ui = new GameUI(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     @Override
     public void create() {
         super.create();
-
-        camera.setToOrtho(false, GameParameters.WORLD_WIDTH, GameParameters.WORLD_HEIGHT);
-        batch = new SpriteBatch();
-        shapeRenderer = new ShapeRenderer();
-
-        penguinTexture = GameAssetManager.loadPenguin1(); //TODO: Replace with actual asset
-
-        camera.setToOrtho(false, GameParameters.WORLD_WIDTH, GameParameters.WORLD_HEIGHT);
+        InputMultiplexer inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(inputController);
+        inputMultiplexer.addProcessor(stage);
+        Gdx.input.setInputProcessor(inputMultiplexer);
     }
-
-
 
     @Override
     protected void update(float delta) {
+        if (!gameStateLoaded) {
+            initialPollDelay -= delta;
+            autoFallbackTimer += delta;
+            if (initialPollDelay <= 0 || autoFallbackTimer >= AUTO_FALLBACK_TIMEOUT) {
+                gameStateLoaded = true;
+            }
+            return;
+        }
+        
         model.update(delta);
+        controller.update(delta);
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            controller.pauseGame();
+            handleExit();
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            controller.onGameFinished();
+        }
+
+        if ("finished".equals(model.getGameStatus())) {
             controller.onGameFinished();
         }
 
@@ -83,95 +84,119 @@ public class GameState extends BaseState {
 
     @Override
     public void enter() {
-        // TODO: Initialize ECS, Load map, etc.
-        InputMultiplexer multiplexer = new InputMultiplexer();
-        multiplexer.addProcessor(inputController);
-        multiplexer.addProcessor(stage); // For handling back key, etc.
-        Gdx.input.setInputProcessor(multiplexer);
+        controller.onGameEntered();
+        Gdx.input.setInputProcessor(inputController);
     }
 
     @Override
     public void leave() {
-        // TODO: Dispose assets
-        shapeRenderer.dispose();
+        controller.onGameLeft();
+        Gdx.input.setInputProcessor(null);
+        renderer.dispose();
+        ui.dispose();
         super.leave();
     }
 
     @Override
     public void render(float delta) {
-        super.render(delta);
-        // TODO: Render ECS entities
+        Gdx.gl.glClearColor(0.9f, 0.95f, 1f, 1f);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        Gdx.gl.glClearColor(0.5f, 0.8f, 1f, 1); // Light blue background
-        Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
+        update(delta);
 
-        camera.update();
+        renderer.beginRender();
 
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-        renderMap();
-        renderPenguin();
-        batch.end();
-
-        renderAimLayer();
-    }
-
-    private void renderPenguin() {
-        batch.draw(penguinTexture, model.getPenguinPositionX() - 16, model.getPenguinPositionY() - 16, 32, 32);
-    }
-
-    private void renderMap() {
-    }
-
-    private void renderAimLayer() {
-        if(inputController.getState() != InputController.InputState.LOCKED) {
-            Vector2 penguinPos = new Vector2(model.getPenguinPositionX(), model.getPenguinPositionY());
-            Vector2 aimPos = inputController.getRelativeTouchPos().scl(-1); // Invert to get launch direction
-            shapeRenderer.setProjectionMatrix(camera.combined);
-            renderDragLine(penguinPos, aimPos);
-            renderTrajectory(penguinPos, aimPos);
-   
+        renderer.renderBoard();
+        renderer.renderObstacles(model.getObstacles());
+        renderer.renderBoosts(model.getBoosts());
+        
+        java.util.List<GameRenderer.PlayerRenderData> playerRenderData = new java.util.ArrayList<>();
+        for (GameModel.PlayerData pd : model.getPlayers()) {
+            playerRenderData.add(new GameRenderer.PlayerRenderData(
+                pd.playerId, pd.displayName, pd.positionX, pd.positionY, pd.score, pd.connected
+            ));
         }
-    }
+        renderer.renderPlayers(playerRenderData, model.getPlayerId());
 
-    private void renderDragLine(Vector2 penguinPos,Vector2 aimPos) {
-
-
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(1f, 1f, 1f, 0.8f);
-
-        shapeRenderer.line(penguinPos, penguinPos.cpy().sub(aimPos));
-        shapeRenderer.end();
-
-    }
-
-    
-
-    private void renderTrajectory(Vector2 penguinPos,Vector2 aimPos) {
-
-
-
-
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(1f, 0.9f, 0.2f, 1f); // yellow dots
- 
-        for (int i = 1; i <= GameParameters.TRAJECTORY_STEPS; i++) {
-            float t = i * GameParameters.TRAJECTORY_STEP_TIME;
-            float dotX = penguinPos.x + aimPos.x * t;
-            float dotY = penguinPos.y + aimPos.y * t;
- 
-            // Stop drawing if the dot exits the world
-            if (dotX < 0 || dotX > GameParameters.WORLD_WIDTH
-                    || dotY < 0 || dotY > GameParameters.WORLD_HEIGHT) break;
- 
-            // Dots fade as they get further along the arc
-            float alpha = 1f - (float) i / GameParameters.TRAJECTORY_STEPS;
-            shapeRenderer.setColor(1f, 0.9f, 0.2f, alpha);
-            shapeRenderer.circle(dotX, dotY, 5f, 10);
+        if (showDragPreview) {
+            renderer.renderDragPreview(
+                inputController.isDragging(),
+                dragScreenStart,
+                dragScreenCurrent,
+                dragAngle,
+                dragVelocity,
+                50f
+            );
         }
- 
-        shapeRenderer.end();
 
+        renderer.endRender();
 
+        GameModel.PlayerData currentPlayer = model.getCurrentPlayer();
+        int score = currentPlayer != null ? currentPlayer.score : 0;
+        ui.render(
+            stage.getBatch(),
+            model.getCurrentPhase(),
+            model.getPhaseTimer(),
+            model.getInputPhaseTimeout(),
+            score,
+            model.getPlayerName(),
+            dragVelocity,
+            dragAngle
+        );
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        renderer.updateCamera(width, height);
+        ((GameUI) ui).dispose();
+        // UI would need to be recreated with new dimensions if needed
+    }
+
+    private InputController.InputCallback createInputCallback() {
+        return new InputController.InputCallback() {
+            @Override
+            public void onDragStart(float screenX, float screenY) {
+                dragScreenStart.set(screenX, screenY);
+                dragScreenCurrent.set(screenX, screenY);
+                showDragPreview = true;
+                Gdx.app.log("GameState", "Drag started at: " + screenX + ", " + screenY);
+            }
+
+            @Override
+            public void onDragUpdate(float screenX, float screenY, float angle, float velocity) {
+                dragScreenCurrent.set(screenX, screenY);
+                dragAngle = angle;
+                dragVelocity = velocity;
+                showDragPreview = true;
+            }
+
+            @Override
+            public void onDragEnd(float screenX, float screenY, float angle, float velocity) {
+                dragAngle = angle;
+                dragVelocity = velocity;
+                showDragPreview = false;
+                dragScreenStart.setZero();
+                dragScreenCurrent.setZero();
+
+                if (model.isCurrentPlayerTurnForUI() && model.getCurrentPhase() == GamePhase.INPUT) {
+                    Gdx.app.log("GameState", String.format("Submitting move: angle=%.2f, velocity=%.2f", angle, velocity));
+                    controller.submitMove(angle, velocity);
+                } else {
+                    String reason = !model.isCurrentPlayerTurnForUI() ? "not your turn" : "not input phase";
+                    Gdx.app.log("GameState", "Move rejected: " + reason);
+                }
+            }
+
+            @Override
+            public void onMenuButtonPressed() {
+                handleExit();
+            }
+        };
+    }
+
+    private void handleExit() {
+        controller.onGameLeft();
+        gsm.set(new MenuState(gsm));
     }
 }
