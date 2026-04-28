@@ -2,6 +2,7 @@ package com.assignments.mtnpen.view.states.game;
 
 import com.assignments.mtnpen.controller.game.GameController;
 import com.assignments.mtnpen.model.game.GameModel;
+import com.assignments.mtnpen.view.assetmanager.GameAssetManager;
 import com.assignments.mtnpen.view.states.base.BaseState;
 import com.assignments.mtnpen.view.states.manager.GameStateManager;
 import com.badlogic.gdx.Gdx;
@@ -17,6 +18,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import com.badlogic.gdx.math.Vector2;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
 
 
 public class GameState extends BaseState {
@@ -26,6 +29,8 @@ public class GameState extends BaseState {
 
     private OrthographicCamera camera;
     private ShapeRenderer shapeRenderer;
+
+    private SpriteBatch sb;
 
 
 
@@ -76,9 +81,6 @@ public class GameState extends BaseState {
         multiplexer.addProcessor(inputController);
         multiplexer.addProcessor(stage); // For handling back key, etc.
         Gdx.input.setInputProcessor(multiplexer);
-
-        controller.onGameEntered();
-
     }
 
     @Override
@@ -86,15 +88,16 @@ public class GameState extends BaseState {
         // TODO: Dispose assets
         shapeRenderer.dispose();
         super.leave();
-
-        controller.onGameLeft();
-
     }
 
     @Override
     public void render(float delta) {
         super.render(delta);
         // TODO: Render ECS entities
+
+        sb.begin();
+        sb.draw(GameAssetManager.loadPenguin1(), model.getPenguinPositionX() - 16, model.getPenguinPositionY() - 16, 32, 32);
+        sb.end();
 
         camera.update();
         
